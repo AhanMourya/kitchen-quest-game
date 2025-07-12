@@ -137,9 +137,9 @@ export default function Dashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Trophy className="w-5 h-5 text-accent" />
-                  Recent Achievements
+                  Achievements
                 </CardTitle>
-                <CardDescription>Your latest cooking victories</CardDescription>
+                <CardDescription>Battles</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
