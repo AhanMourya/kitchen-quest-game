@@ -173,29 +173,28 @@ export default function Dashboard() {
               })}
             </div>
 
-            {/* Recent Achievements (empty for new user) */}
-            {recentAchievements.length > 0 && (
-              <Card className="shadow-card">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Trophy className="w-5 h-5 text-accent" />
-                    Recent Achievements
-                  </CardTitle>
-                  <CardDescription>Your latest cooking victories</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {recentAchievements.map((achievement, index) => {
-                      const Icon = achievement.icon;
-                      return (
-                        <div key={index} className="flex items-center gap-4 p-3 rounded-lg bg-muted/30">
-                          <div className="w-10 h-10 bg-gradient-accent rounded-lg flex items-center justify-center">
-                            <Icon className="w-5 h-5 text-accent-foreground" />
-                          </div>
-                          <div>
-                            <div className="font-semibold">{achievement.name}</div>
-                            <div className="text-sm text-muted-foreground">{achievement.description}</div>
-                          </div>
+            {/* Recent Achievements */}
+            <Card className="shadow-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-accent" />
+                  Achievements
+                </CardTitle>
+                <CardDescription>Battles</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {recentAchievements.map((achievement, index) => {
+                    const Icon = achievement.icon;
+                    return (
+                      <div key={index} className="flex items-center gap-4 p-3 rounded-lg bg-muted/30">
+                        <div className="w-10 h-10 bg-gradient-accent rounded-lg flex items-center justify-center">
+                          <Icon className="w-5 h-5 text-accent-foreground" />
+                        </div>
+                        <div>
+                          <div className="font-semibold">{achievement.name}</div>
+                          <div className="text-sm text-muted-foreground">{achievement.description}</div>
+
                         </div>
                       );
                     })}

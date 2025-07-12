@@ -86,7 +86,7 @@ export default function Profile() {
   const progressToNext = ((userProfile.xp - 0) / (userProfile.xpToNext - 0)) * 100;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex min-h-screen bg-background">
       <Navigation />
       
       <div className="container mx-auto px-6 py-8">

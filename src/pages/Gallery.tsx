@@ -94,7 +94,7 @@ export default function Gallery() {
   });
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className=" flex min-h-screen bg-background">
       <Navigation />
       
       <div className="container mx-auto px-6 py-8">
