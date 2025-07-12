@@ -1,3 +1,5 @@
+
+// Recipes page: Browse, search, and cook recipes to earn XP and level up
 import { useState, useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,20 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Search,
-  Clock,
-  Star,
-  Lock,
-  ChefHat,
-  Filter,
-  Grid3X3,
-  List,
-  X
-} from "lucide-react";
+import { Search, Clock, Star, Lock, ChefHat, Filter, Grid3X3, List, X } from "lucide-react";
 
-const API_KEY = "11e83c6ceb5b450b9f8da21d23d7bab4"; // YOUR SPOONACULAR API KEY
 
+const API_KEY = "fa488b0073f4429dbabd7b229f02d988"; // YOUR SPOONACULAR API KEY
+// Divijs api key rn, replace with new email after.
 const cuisineTypes = [
   { id: "african", label: " African", count: 45 },
   { id: "asian", label: " Asian", count: 38 },
@@ -48,17 +41,33 @@ const cuisineTypes = [
   { id: "vietnamese", label: " Vietnamese", count: 52 },
 ];
 
-// MOCK: Replace with your real backend fetch to get user's saved XP
-async function fetchUserXP(): Promise<number> {
-  // Example: fetch('/api/user/xp').then(r => r.json()).then(data => data.xp)
-  // For now, return 0 as starting point
-  return 0;
+
+
+
+// --- XP/Level Local Storage helpers ---
+// All user XP/level data is stored in localStorage under the key 'userProfile'.
+// The structure is: { xp: number, level: number, xpToNextLevel: number }
+function getUserProfileLocal(): { xp: number; level: number; xpToNextLevel: number } {
+  const data = localStorage.getItem('userProfile');
+  if (data) {
+    try {
+      const parsed = JSON.parse(data);
+      return {
+        xp: typeof parsed.xp === 'number' ? parsed.xp : 0,
+        level: typeof parsed.level === 'number' ? parsed.level : 1,
+        xpToNextLevel: typeof parsed.xpToNextLevel === 'number' ? parsed.xpToNextLevel : 400,
+      };
+    } catch {
+      // fallback to default if corrupted
+    }
+  }
+  return { xp: 0, level: 1, xpToNextLevel: 400 };
 }
 
-// MOCK: Replace with your real backend call to update XP
-async function updateUserXP(newXP: number): Promise<void> {
-  // Example: await fetch('/api/user/xp', { method: 'POST', body: JSON.stringify({ xp: newXP }) })
-  console.log("Updating XP on backend to:", newXP);
+function setUserProfileLocal(profile: { xp: number; level: number; xpToNextLevel: number }) {
+  localStorage.setItem('userProfile', JSON.stringify(profile));
+  // Fire a custom event so Navigation and other listeners update immediately
+  window.dispatchEvent(new Event('userProfileUpdated'));
 }
 
 export default function Recipes() {
@@ -69,13 +78,24 @@ export default function Recipes() {
   const [showUnlockedOnly, setShowUnlockedOnly] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<any | null>(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  // TEMP: Store total results from Spoonacular API
+  const [totalResults, setTotalResults] = useState<number | null>(null);
 
-  // USER XP STATE
-  const [userXP, setUserXP] = useState(0);
+  // USER XP/LEVEL STATE
+  // userXP: current XP towards next level
+  // userLevel: current user level
+  // xpToNextLevel: XP required to reach next level
+  // All values are loaded from and saved to localStorage
+  const [userXP, setUserXP] = useState(() => getUserProfileLocal().xp);
+  const [userLevel, setUserLevel] = useState(() => getUserProfileLocal().level);
+  const [xpToNextLevel, setXpToNextLevel] = useState(() => getUserProfileLocal().xpToNextLevel);
 
-  // On mount, fetch user XP from backend (e.g. Google login tied DB)
+  // On mount, load user XP/level from localStorage
   useEffect(() => {
-    fetchUserXP().then((xp) => setUserXP(xp));
+    const { xp, level, xpToNextLevel } = getUserProfileLocal();
+    setUserXP(xp);
+    setUserLevel(level);
+    setXpToNextLevel(xpToNextLevel);
   }, []);
 
   const fetchRecipes = async (cuisineList: string[]) => {
@@ -84,6 +104,9 @@ export default function Recipes() {
       const url = `https://api.spoonacular.com/recipes/complexSearch?apiKey=${API_KEY}&number=18&addRecipeInformation=true${cuisineParam}`;
       const res = await fetch(url);
       const data = await res.json();
+
+      // TEMP: Store total results count
+      setTotalResults(typeof data.totalResults === 'number' ? data.totalResults : null);
 
       const mapped = data.results.map((recipe: any) => ({
         id: recipe.id,
@@ -108,6 +131,7 @@ export default function Recipes() {
       setRecipes(mapped);
     } catch (error) {
       console.error("Failed to fetch recipes", error);
+      setTotalResults(null);
     }
   };
 
@@ -160,15 +184,24 @@ export default function Recipes() {
     }
   };
 
-  // XP awarding logic on finishing cooking
-  const handleFinishCooking = async () => {
+  // XP/level awarding logic on finishing cooking a recipe
+  // This will add XP, handle level up, and persist all changes to localStorage
+  const handleFinishCooking = () => {
     if (!selectedRecipe) return;
-    const newXP = userXP + selectedRecipe.xp;
+    let newXP = userXP + selectedRecipe.xp;
+    let newLevel = userLevel;
+    let newXpToNextLevel = xpToNextLevel;
+    // Level up logic: if XP exceeds threshold, increase level and recalculate XP
+    if (newXP >= xpToNextLevel) {
+      newLevel += 1;
+      newXP = newXP - xpToNextLevel;
+      newXpToNextLevel = Math.floor(xpToNextLevel * 1.5); // Increase next level XP requirement
+    }
     setUserXP(newXP);
-
-    // Save XP to backend (persist for logged-in user)
-    await updateUserXP(newXP);
-
+    setUserLevel(newLevel);
+    setXpToNextLevel(newXpToNextLevel);
+    // Save XP, level, and next level XP to localStorage for persistence
+    setUserProfileLocal({ xp: newXP, level: newLevel, xpToNextLevel: newXpToNextLevel });
     setSelectedRecipe(null);
     alert(`Congrats! You earned +${selectedRecipe.xp} XP! Your total XP is now ${newXP}.`);
   };
@@ -183,7 +216,8 @@ export default function Recipes() {
             <div className="mb-8">
               <h1 className="text-3xl font-bold mb-2">Recipe Library</h1>
               <p className="text-muted-foreground">Discover, cook, and master delicious recipes from around the world</p>
-              <p className="mt-1 text-sm text-primary font-semibold">Your XP: {userXP}</p>
+              {/* Show current XP and level */}
+              <p className="mt-1 text-sm text-primary font-semibold">Your XP: {userXP} | Level: {userLevel}</p>
             </div>
 
             {/* Main Body */}
@@ -245,7 +279,13 @@ export default function Recipes() {
               {/* Recipe Cards */}
               <div className="flex-1">
                 <div className="flex justify-between items-center mb-6">
-                  <span className="text-sm text-muted-foreground">Showing {filteredRecipes.length} recipes</span>
+                  <div>
+                    <span className="text-sm text-muted-foreground">Showing {filteredRecipes.length} recipes</span>
+                    {/* TEMP: Show total results from Spoonacular API */}
+                    {typeof totalResults === 'number' && (
+                      <span className="ml-3 text-xs text-accent-foreground bg-accent px-2 py-1 rounded">Total: {totalResults}</span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2">
                     <Button variant={viewMode === "grid" ? "default" : "outline"} onClick={() => setViewMode("grid")} size="sm"><Grid3X3 className="w-4 h-4" /></Button>
                     <Button variant={viewMode === "list" ? "default" : "outline"} onClick={() => setViewMode("list")} size="sm"><List className="w-4 h-4" /></Button>

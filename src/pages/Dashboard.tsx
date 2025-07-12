@@ -1,3 +1,5 @@
+
+// Dashboard page: Shows user stats, XP/level, daily mission, and quick actions
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,33 +7,37 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { XPProgressBar } from "@/components/XPProgressBar";
 import { Navigation } from "@/components/Navigation";
-import {
-  Star,
-  Trophy,
-  BookOpen,
-  Camera,
-  Users,
-  Clock,
-  ChefHat,
-  Flame,
-  Target
-} from "lucide-react";
+// import { auth, getUserProfile, updateUserXPLevel } from "../firebase"; // Firebase helpers (REMOVED)
+import { Star, Trophy, BookOpen, Camera, Users, Clock, ChefHat, Flame, Target } from "lucide-react"; // Icons
 
-// MOCK: Replace with your real backend fetch to get user's XP, level, etc.
-async function fetchUserXP(): Promise<{ xp: number; level: number; xpToNextLevel: number }> {
-  // For now, return static example data
-  return {
-    xp: 100,
-    level: 1,
-    xpToNextLevel: 400,
-  };
+
+
+// --- XP/Level Local Storage helpers ---
+// All user XP/level data is stored in localStorage under the key 'userProfile'.
+// The structure is: { xp: number, level: number, xpToNextLevel: number }
+function getUserProfileLocal(): { xp: number; level: number; xpToNextLevel: number } {
+  const data = localStorage.getItem('userProfile');
+  if (data) {
+    try {
+      const parsed = JSON.parse(data);
+      return {
+        xp: typeof parsed.xp === 'number' ? parsed.xp : 0,
+        level: typeof parsed.level === 'number' ? parsed.level : 1,
+        xpToNextLevel: typeof parsed.xpToNextLevel === 'number' ? parsed.xpToNextLevel : 400,
+      };
+    } catch {
+      // fallback to default if corrupted
+    }
+  }
+  return { xp: 0, level: 1, xpToNextLevel: 400 };
 }
 
-// MOCK: Replace with your real backend call to update XP
-async function updateUserXP(newXP: number): Promise<void> {
-  console.log("Updating XP on backend to:", newXP);
+function setUserProfileLocal(profile: { xp: number; level: number; xpToNextLevel: number }) {
+  localStorage.setItem('userProfile', JSON.stringify(profile));
 }
 
+
+// Example daily mission for the user
 const dailyMission = {
   title: "Spicy Thai Green Curry",
   description: "Master the art of Thai cuisine with this medium-difficulty curry",
@@ -41,19 +47,20 @@ const dailyMission = {
   cuisineType: "Thai"
 };
 
-export default function Dashboard() {
-  // Use state for user stats
-  const [userXP, setUserXP] = useState(0);
-  const [userLevel, setUserLevel] = useState(1);
-  const [xpToNextLevel, setXpToNextLevel] = useState(400);
 
-  // Fetch user XP on mount
+export default function Dashboard() {
+  // State for user stats: XP, level, and XP needed for next level
+  // All values are loaded from and saved to localStorage
+  const [userXP, setUserXP] = useState(() => getUserProfileLocal().xp);
+  const [userLevel, setUserLevel] = useState(() => getUserProfileLocal().level);
+  const [xpToNextLevel, setXpToNextLevel] = useState(() => getUserProfileLocal().xpToNextLevel);
+
+  // On mount, load user XP/level from localStorage
   useEffect(() => {
-    fetchUserXP().then(({ xp, level, xpToNextLevel }) => {
-      setUserXP(xp);
-      setUserLevel(level);
-      setXpToNextLevel(xpToNextLevel);
-    });
+    const { xp, level, xpToNextLevel } = getUserProfileLocal();
+    setUserXP(xp);
+    setUserLevel(level);
+    setXpToNextLevel(xpToNextLevel);
   }, []);
 
   const quickStats = [
@@ -66,16 +73,21 @@ export default function Dashboard() {
   // Empty recent achievements for a new user
   const recentAchievements: { name: string; description: string; icon: React.FC<any>; }[] = [];
 
-  // Example handler for "completing" the daily mission — adds XP
-  const handleCompleteMission = async () => {
-    const newXP = userXP + dailyMission.xpReward;
+  // Handler for completing the daily mission — adds XP, handles level up, and updates localStorage
+  const handleCompleteMission = () => {
+    let newXP = userXP + dailyMission.xpReward;
+    let newLevel = userLevel;
+    let newXpToNextLevel = 400 * (2 ** newLevel - 1) - newXP;
 
-    // For demo, keep level and xpToNextLevel static; real logic may update these
+    if (newXpToNextLevel <= 0) {
+      newLevel += 1;
+      newXpToNextLevel = 400 * (2 ** newLevel - 1); // Increase next level XP requirement
+    }
     setUserXP(newXP);
-
-    // Persist XP to backend
-    await updateUserXP(newXP);
-
+    setUserLevel(newLevel);
+    setXpToNextLevel(newXpToNextLevel);
+    // Save XP, level, and next level XP to localStorage for persistence
+    setUserProfileLocal({ xp: newXP, level: newLevel, xpToNextLevel: newXpToNextLevel });
     alert(`Congrats! You earned +${dailyMission.xpReward} XP! Your total XP is now ${newXP}.`);
   };
 
@@ -110,8 +122,8 @@ export default function Dashboard() {
           <CardContent>
             <XPProgressBar currentXP={userXP} level={userLevel} />
             <p className="mt-2 text-center text-muted-foreground">
-              {userXP} XP <br />
-              {xpToNextLevel} XP to level {userLevel + 1}
+               
+               Current XP: {userXP}
             </p>
           </CardContent>
         </Card>

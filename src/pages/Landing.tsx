@@ -166,6 +166,19 @@ export default function Landing() {
               <Link to="/signup">
                 <Button variant="outline" size="sm">Signup</Button>
               </Link>
+              {/* TEMP: Button to clear all localStorage data for dev/testing */}
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to clear ALL localStorage data? This cannot be undone.')) {
+                    localStorage.clear();
+                    window.location.reload();
+                  }
+                }}
+              >
+                Clear Local Storage
+              </Button>
             </div>
           </div>
         </div>
