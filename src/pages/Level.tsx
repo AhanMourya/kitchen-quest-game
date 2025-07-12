@@ -1,223 +1,278 @@
-import { Navigation } from "@/components/Navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+import { useState } from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Trophy, Star, Crown, Flame, Target, ChefHat } from "lucide-react";
+import { Navigation } from "@/components/Navigation";
+import { X } from "lucide-react";
+// Helper to persist and load meal completion state
+function getCuisineProgress() {
+  const data = localStorage.getItem("cuisineProgress");
+  return data ? JSON.parse(data) : {};
+}
+function setCuisineProgress(progress: any) {
+  localStorage.setItem("cuisineProgress", JSON.stringify(progress));
+}
 
-const achievements = [
+const cuisines = [
   {
-    id: 1,
-    title: "First Flame",
-    description: "Complete your first recipe",
-    icon: Flame,
-    unlocked: true,
-    xp: 100,
+    name: "Greek",
+    color: "bg-cyan-100",
+    meals: [
+      "Greek Salad",
+      "Souvlaki",
+      "Spanakopita",
+      "Moussaka",
+      { name: "Baklava", boss: true, bossName: "The Olympian Chef" },
+    ],
   },
   {
-    id: 2,
-    title: "Kitchen Novice",
-    description: "Reach Level 1",
-    icon: ChefHat,
-    unlocked: true,
-    xp: 0,
+    name: "Italian",
+    color: "bg-red-100",
+    meals: [
+      "Italian Tuna Pasta",
+      "Broccolini Quinoa Pilaf",
+      "Salmon Quinoa Risotto",
+      "Roma Tomato Bruschetta",
+      { name: "Tiramisu", boss: true, bossName: "Nonna Supreme" },
+    ],
   },
   {
-    id: 3,
-    title: "Breakfast Champion",
-    description: "Master 3 breakfast recipes",
-    icon: Star,
-    unlocked: false,
-    xp: 300,
-    progress: 33,
+    name: "Chinese",
+    color: "bg-yellow-100",
+    meals: [
+      "Kung Pao Chicken",
+      "Sweet and Sour Pork",
+      "Mapo Tofu",
+      "Peking Duck",
+      { name: "Dumplings", boss: true, bossName: "The Dim Sum Dragon" },
+    ],
   },
   {
-    id: 4,
-    title: "Spice Master",
-    description: "Cook 5 spicy dishes",
-    icon: Target,
-    unlocked: false,
-    xp: 500,
-    progress: 0,
+    name: "Indian",
+    color: "bg-orange-100",
+    meals: [
+      "Butter Chicken",
+      "Palak Paneer",
+      "Biryani",
+      "Chole Bhature",
+      { name: "Dosa", boss: true, bossName: "The Spice Maharaja" },
+    ],
   },
   {
-    id: 5,
-    title: "Kitchen Crown",
-    description: "Reach Level 5",
-    icon: Crown,
-    unlocked: false,
-    xp: 1000,
-    progress: 20,
+    name: "Mexican",
+    color: "bg-green-100",
+    meals: [
+      "Tacos",
+      "Enchiladas",
+      "Guacamole",
+      "Chiles en Nogada",
+      { name: "Mole Poblano", boss: true, bossName: "El Gran Sabio" },
+    ],
+  },
+  {
+    name: "Japanese",
+    color: "bg-blue-100",
+    meals: [
+      "Sushi",
+      "Ramen",
+      "Okonomiyaki",
+      "Tempura",
+      { name: "Katsu Curry", boss: true, bossName: "The Shogun Chef" },
+    ],
+  },
+  {
+    name: "French",
+    color: "bg-pink-100",
+    meals: [
+      "Coq au Vin",
+      "Bouillabaisse",
+      "Ratatouille",
+      "Quiche Lorraine",
+      { name: "Crème Brûlée", boss: true, bossName: "Le Grand Pâtissier" },
+    ],
+  },
+  {
+    name: "American",
+    color: "bg-purple-100",
+    meals: [
+      "Burger",
+      "Buffalo Wings",
+      "Mac and Cheese",
+      "Clam Chowder",
+      { name: "Apple Pie", boss: true, bossName: "The Yankee Legend" },
+    ],
+  },
+  {
+    name: "Mediterranean",
+    color: "bg-teal-100",
+    meals: [
+      "Greek Salad",
+      "Falafel",
+      "Shakshuka",
+      "Moussaka",
+      { name: "Baklava", boss: true, bossName: "The Aegean Master" },
+    ],
+  },
+  {
+    name: "Korean",
+    color: "bg-fuchsia-100",
+    meals: [
+      "Bibimbap",
+      "Kimchi Jjigae",
+      "Bulgogi",
+      "Japchae",
+      { name: "Tteokbokki", boss: true, bossName: "The Seoul Sizzler" },
+    ],
+  },
+  {
+    name: "Thai",
+    color: "bg-lime-100",
+    meals: [
+      "Pad Thai",
+      "Green Curry",
+      "Tom Yum Soup",
+      "Som Tum",
+      { name: "Mango Sticky Rice", boss: true, bossName: "The Sweet Sage" },
+    ],
   },
 ];
 
-const levels = [
-  { level: 1, title: "Kitchen Newbie", xpRequired: 0, xpNext: 500, current: true },
-  { level: 2, title: "Aspiring Cook", xpRequired: 500, xpNext: 1200, current: false },
-  { level: 3, title: "Home Chef", xpRequired: 1200, xpNext: 2000, current: false },
-  { level: 4, title: "Culinary Artist", xpRequired: 2000, xpNext: 3000, current: false },
-  { level: 5, title: "Kitchen Master", xpRequired: 3000, xpNext: 4500, current: false },
-];
+export default function CuisineMastery() {
+  const [selectedCuisine, setSelectedCuisine] = useState<null | typeof cuisines[0]>(null);
+  const [progress, setProgress] = useState(() => getCuisineProgress());
 
-export default function Level() {
-  const currentXP = 100;
-  const currentLevel = levels.find(l => l.current);
-  const progressToNext = currentLevel ? ((currentXP - currentLevel.xpRequired) / (currentLevel.xpNext - currentLevel.xpRequired)) * 100 : 0;
+  // Handler for checking a meal as completed
+  function handleCheckMeal(cuisineName: string, mealIdx: number) {
+    setProgress((prev: any) => {
+      const updated = { ...prev };
+      if (!updated[cuisineName]) updated[cuisineName] = [false, false, false, false, false];
+      updated[cuisineName][mealIdx] = !updated[cuisineName][mealIdx];
+      setCuisineProgress(updated);
+      return updated;
+    });
+  }
 
   return (
     <div className="flex min-h-screen bg-background">
       <Navigation />
-      
-      <div className="container mx-auto px-6 py-8">
-        <div className="space-y-8">
-          {/* Header */}
-          <div className="text-center space-y-4">
-            <h1 className="text-4xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-              Level Progression
-            </h1>
-            <p className="text-muted-foreground text-lg">
-              Track your culinary journey and unlock new achievements
-            </p>
-          </div>
-
-          {/* Current Level Status */}
-          <Card className="shadow-glow border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center">
-                  <Trophy className="w-6 h-6 text-primary-foreground" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold">Level {currentLevel?.level}</div>
-                  <div className="text-muted-foreground">{currentLevel?.title}</div>
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>XP Progress</span>
-                  <span>{currentXP} / {currentLevel?.xpNext} XP</span>
-                </div>
-                <Progress value={progressToNext} className="h-3" />
-                <div className="text-center text-sm text-muted-foreground">
-                  {(currentLevel?.xpNext || 0) - currentXP} XP to next level
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="grid lg:grid-cols-2 gap-8">
-            {/* Achievements */}
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Star className="w-5 h-5 text-accent" />
-                  Achievements
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {achievements.map((achievement) => {
-                    const Icon = achievement.icon;
-                    return (
-                      <div
-                        key={achievement.id}
-                        className={`p-4 rounded-lg border transition-all ${
-                          achievement.unlocked
-                            ? "bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/30"
-                            : "bg-muted/50 border-border/50"
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div
-                            className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                              achievement.unlocked
-                                ? "bg-gradient-primary text-primary-foreground"
-                                : "bg-muted text-muted-foreground"
-                            }`}
-                          >
-                            <Icon className="w-5 h-5" />
-                          </div>
-                          <div className="flex-1 space-y-1">
-                            <div className="flex items-center gap-2">
-                              <h4 className="font-semibold">{achievement.title}</h4>
-                              {achievement.unlocked && (
-                                <Badge variant="secondary" className="text-xs">
-                                  +{achievement.xp} XP
-                                </Badge>
-                              )}
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              {achievement.description}
-                            </p>
-                            {!achievement.unlocked && achievement.progress !== undefined && (
-                              <div className="space-y-1">
-                                <Progress value={achievement.progress} className="h-2" />
-                                <div className="text-xs text-muted-foreground">
-                                  {achievement.progress}% complete
-                                </div>
-                              </div>
+      <main className="flex-1 p-8 max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8">Cuisine Mastery</h1>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {cuisines.map((cuisine, idx) => {
+            // Find boss meal index
+            const bossIdx = cuisine.meals.findIndex(m => typeof m === "object" && m.boss);
+            const bossDone = bossIdx !== -1 && progress[cuisine.name]?.[bossIdx];
+            return (
+              <div key={cuisine.name} className="relative group">
+                <Card
+                  className={`shadow-card ${cuisine.color} border-2 border-primary/10 cursor-pointer hover:scale-[1.03] transition-transform overflow-hidden ${bossDone ? "opacity-60 grayscale relative" : ""}`}
+                  onClick={() => !bossDone && setSelectedCuisine(cuisine)}
+                  style={{ pointerEvents: bossDone ? "none" : undefined }}
+                >
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <span className={`text-xl font-semibold ${bossDone ? "line-through text-muted-foreground" : ""}`}>{cuisine.name}</span>
+                      <Badge variant="secondary">5 Meals</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {cuisine.meals.map((meal, idx2) => {
+                        const mealName = typeof meal === "object" && meal !== null ? meal.name : String(meal);
+                        const isBoss = typeof meal === "object" && meal.boss;
+                        return (
+                          <li key={mealName + "-" + idx2} className="flex items-center gap-2">
+                            <span className={`w-2 h-2 rounded-full ${isBoss ? "bg-yellow-400" : "bg-primary"} inline-block`} />
+                            <span className={`text-base ${bossDone ? "line-through text-muted-foreground" : ""}`}>{mealName}</span>
+                            {isBoss && bossDone && (
+                              <span className="ml-2 px-2 py-1 bg-green-300 text-green-900 rounded text-xs font-bold border border-green-500 shadow animate-bounce">Defeated!</span>
                             )}
-                          </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </CardContent>
+                  {/* Fun overlay for defeated */}
+                  {bossDone && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
+                      <div className="rotate-[-20deg] text-4xl font-extrabold text-green-700/80 drop-shadow-lg tracking-widest select-none animate-in fade-in zoom-in-95">
+                        <span className="bg-green-200/80 px-6 py-2 rounded-xl border-4 border-green-400 shadow-xl">DEFEATED!</span>
+                      </div>
+                      <div className="mt-4 text-lg text-green-900 font-bold italic animate-pulse">You mastered this cuisine!</div>
+                      <svg width="120" height="120" className="absolute -top-4 -right-4 opacity-40" viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" stroke="#22c55e" strokeWidth="8" fill="none" strokeDasharray="12 12" /></svg>
+                    </div>
+                  )}
+                  {/* Fun border effect */}
+                  <div className={`absolute inset-0 pointer-events-none rounded-xl border-4 border-dashed border-transparent group-hover:border-primary/40 transition-all duration-300 ${bossDone ? "border-green-400 animate-pulse" : ""}`}></div>
+                </Card>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Modal/Popup for cuisine tree */}
+        {selectedCuisine && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-card rounded-xl shadow-2xl p-8 max-w-lg w-full relative animate-in fade-in zoom-in-95">
+              <button
+                className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
+                onClick={() => setSelectedCuisine(null)}
+                aria-label="Close"
+              >
+                <X className="w-6 h-6" />
+              </button>
+              <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
+                {selectedCuisine.name} Mastery Tree
+                <Badge variant="secondary">5 Meals</Badge>
+              </h2>
+              <p className="mb-6 text-muted-foreground">Progress through these meals from easiest to hardest. Check off as you master each one!</p>
+              <div className="flex flex-col items-center">
+                {/* Tree visualization: vertical with connecting lines */}
+                <div className="flex flex-col items-center">
+                  {selectedCuisine.meals.map((meal, i) => {
+                    // Support both string and object for meal
+                    const isObj = typeof meal === "object" && meal !== null;
+                    const mealName: string = isObj ? meal.name : String(meal);
+                    const isBoss = isObj && meal.boss;
+                    const bossName = isObj && meal.bossName;
+                    // Boss meal: only enable checkbox if all previous are checked
+                    const bossDisabled = isBoss && progress[selectedCuisine.name]?.slice(0, i)?.some((v: boolean) => !v);
+                    return (
+                      <div key={mealName + "-" + i} className="flex flex-col items-center w-full">
+                        <div className={`flex items-center gap-3 w-full ${isBoss ? "bg-gradient-to-r from-yellow-200 via-yellow-100 to-transparent rounded-lg border-2 border-yellow-400 shadow-lg py-2 px-3" : ""}`}>
+                          <input
+                            type="checkbox"
+                            checked={progress[selectedCuisine.name]?.[i] || false}
+                            onChange={() => handleCheckMeal(selectedCuisine.name, i)}
+                            className={`accent-primary w-5 h-5 rounded border border-primary/40 shadow ${isBoss ? "ring-2 ring-yellow-400" : ""}`}
+                            disabled={!!bossDisabled}
+                          />
+                          <span className={`text-lg font-medium ${progress[selectedCuisine.name]?.[i] ? "line-through text-primary" : ""} ${isBoss ? "text-yellow-900 font-extrabold tracking-wide drop-shadow" : ""}`}>
+                            {mealName}
+                          </span>
+                          {isBoss && (
+                            <span className="ml-2 px-2 py-1 bg-yellow-300 text-yellow-900 rounded text-xs font-bold animate-pulse border border-yellow-500 shadow">BOSS</span>
+                          )}
                         </div>
+                        {isBoss && bossName && (
+                          <div className="text-xs text-yellow-700 font-semibold italic mb-2 mt-1">Defeat <span className="font-bold">{bossName}</span> to master this cuisine!</div>
+                        )}
+                        {i < selectedCuisine.meals.length - 1 && (
+                          <div className="flex flex-col items-center">
+                            <div className="h-6 w-1 bg-gradient-to-b from-primary/60 to-secondary/30 my-1 rounded-full relative">
+                              <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-2 border-primary rounded-full shadow" />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Level Roadmap */}
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="w-5 h-5 text-primary" />
-                  Level Roadmap
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {levels.map((level, index) => (
-                    <div
-                      key={level.level}
-                      className={`p-4 rounded-lg border transition-all ${
-                        level.current
-                          ? "bg-primary/10 border-primary/30"
-                          : level.level < (currentLevel?.level || 1)
-                          ? "bg-secondary/10 border-secondary/30"
-                          : "bg-muted/50 border-border/50"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                            level.current
-                              ? "bg-gradient-primary text-primary-foreground"
-                              : level.level < (currentLevel?.level || 1)
-                              ? "bg-secondary text-secondary-foreground"
-                              : "bg-muted text-muted-foreground"
-                          }`}
-                        >
-                          {level.level}
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-semibold">{level.title}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {level.level === 1 ? "Starting level" : `${level.xpRequired} XP required`}
-                          </div>
-                        </div>
-                        {level.current && (
-                          <Badge variant="default">Current</Badge>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        )}
+      </main>
     </div>
   );
 }
