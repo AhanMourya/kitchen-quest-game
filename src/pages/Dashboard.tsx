@@ -24,57 +24,120 @@ import {
   X,
 } from "lucide-react";
 
-// Your new Spoonacular API key
+// Your Spoonacular API key
 const API_KEY = "d111b78fa08b4cabae59c113e4e86432";
 
 // LocalStorage keys
-const STORAGE_KEY = "dailyMissionRecipe";
-const STORAGE_TIME_KEY = "dailyMissionTimestamp";
+const STORAGE_MISSION_KEY = "dailyMissionRecipe";
+const STORAGE_TIMESTAMP_KEY = "dailyMissionTimestamp";
+const STORAGE_PROFILE_KEY = "userProfile";
 
-// Helper to check if stored mission is still valid (<24 hours)
+// Helper to check if stored mission is still valid (<1 hour freshness)
 function isMissionFresh(timestamp: number | null) {
   if (!timestamp) return false;
   const now = Date.now();
-  return now - timestamp < 24 * 60 * 60 * 1000; // 24 hours in ms
+  return now - timestamp < 60 * 60 * 1000; // 1 hour in ms
 }
 
-// MOCK: Replace with your real backend fetch to get user's XP, level, etc.
-async function fetchUserXP(): Promise<{
+// Load user XP/level/profile from localStorage
+function getUserProfileLocal() {
+  const data = localStorage.getItem(STORAGE_PROFILE_KEY);
+  if (data) {
+    try {
+      const parsed = JSON.parse(data);
+      return {
+        xp: typeof parsed.xp === "number" ? parsed.xp : 0,
+        level: typeof parsed.level === "number" ? parsed.level : 1,
+        xpToNextLevel:
+          typeof parsed.xpToNextLevel === "number" ? parsed.xpToNextLevel : 400,
+      };
+    } catch {
+      // fallback defaults
+    }
+  }
+  return { xp: 0, level: 1, xpToNextLevel: 400 };
+}
+
+// Save user XP/level/profile to localStorage
+function setUserProfileLocal(profile: {
   xp: number;
   level: number;
   xpToNextLevel: number;
-}> {
-  // For now, return static example data
-  return {
-    xp: 100,
-    level: 1,
-    xpToNextLevel: 400,
-  };
-}
-
-// MOCK: Replace with your real backend call to update XP
-async function updateUserXP(newXP: number): Promise<void> {
-  console.log("Updating XP on backend to:", newXP);
+}) {
+  localStorage.setItem(STORAGE_PROFILE_KEY, JSON.stringify(profile));
 }
 
 export default function Dashboard() {
-  // User XP state
-  const [userXP, setUserXP] = useState(0);
-  const [userLevel, setUserLevel] = useState(1);
-  const [xpToNextLevel, setXpToNextLevel] = useState(400);
+  // User XP and level state, initialized from localStorage
+  const [userXP, setUserXP] = useState(() => getUserProfileLocal().xp);
+  const [userLevel, setUserLevel] = useState(() => getUserProfileLocal().level);
+  const [xpToNextLevel, setXpToNextLevel] = useState(
+    () => getUserProfileLocal().xpToNextLevel
+  );
 
-  // Loading state for API fetches
+  // Loading states
   const [isLoading, setIsLoading] = useState(false);
 
-  // Daily mission recipe data (the random recipe)
+  // Daily mission and detailed recipe state
   const [dailyMission, setDailyMission] = useState<null | any>(null);
-
-  // Whether quest started (show detailed recipe)
   const [questStarted, setQuestStarted] = useState(false);
-  // Detailed recipe info once started
   const [detailedRecipe, setDetailedRecipe] = useState<null | any>(null);
 
-  // Quick stats - keeping static for now, you can replace with real data
+  // Achievements data
+  const allAchievements = [
+    {
+      id: 1,
+      title: "First Flame",
+      description: "Complete your first recipe",
+      icon: Flame,
+      unlocked: true,
+      xp: 100,
+    },
+    {
+      id: 2,
+      title: "Kitchen Novice",
+      description: "Reach Level 1",
+      icon: ChefHat,
+      unlocked: true,
+      xp: 0,
+    },
+    {
+      id: 3,
+      title: "Breakfast Champion",
+      description: "Master 3 breakfast recipes",
+      icon: Star,
+      unlocked: false,
+      xp: 300,
+      progress: 33,
+    },
+    {
+      id: 4,
+      title: "Spice Master",
+      description: "Cook 5 spicy dishes",
+      icon: Target,
+      unlocked: false,
+      xp: 500,
+      progress: 0,
+    },
+    {
+      id: 5,
+      title: "Kitchen Crown",
+      description: "Reach Level 5",
+      icon: Trophy,
+      unlocked: false,
+      xp: 1000,
+      progress: 20,
+    },
+  ];
+
+  // Achievements UI show state
+  const [showAllAchievements, setShowAllAchievements] = useState(false);
+  const incompleteAchievements = allAchievements.filter((a) => !a.unlocked);
+  const achievementsToShow = showAllAchievements
+    ? incompleteAchievements
+    : incompleteAchievements.slice(0, 5);
+
+  // Quick stats (static, can be dynamic)
   const quickStats = [
     { label: "Recipes Completed", value: 1, icon: BookOpen },
     { label: "Classes Mastered", value: 1, icon: Trophy },
@@ -82,54 +145,51 @@ export default function Dashboard() {
     { label: "Community Votes", value: 1, icon: Users },
   ];
 
-  // Empty recent achievements for a new user
-  const recentAchievements: {
-    name: string;
-    description: string;
-    icon: React.FC<any>;
-  }[] = [];
+  // Level roadmap data
+  const levels = [
+    { level: 1, title: "Prep Cook", xpRequired: 0 },
+    { level: 2, title: "Knife Rookie", xpRequired: 400 },
+    { level: 3, title: "Spice Trainee", xpRequired: 1200 },
+    { level: 4, title: "Flavor Architect", xpRequired: 2800 },
+    { level: 5, title: "Culinary Boss", xpRequired: 2400 },
+  ].map((lvl) => ({
+    ...lvl,
+    current: lvl.level === userLevel,
+  }));
+  const currentLevel = levels.find((lvl) => lvl.level === userLevel);
 
-  // On mount: fetch user XP and daily mission (or load from localStorage)
+  // On mount: load daily mission from localStorage or fetch new one
   useEffect(() => {
-    fetchUserXP().then(({ xp, level, xpToNextLevel }) => {
-      setUserXP(xp);
-      setUserLevel(level);
-      setXpToNextLevel(xpToNextLevel);
-    });
-
     loadOrFetchDailyMission();
   }, []);
 
+  // Fetch or load daily mission with 1-hour refresh logic
   async function loadOrFetchDailyMission() {
     setIsLoading(true);
     try {
-      // Try to load mission and timestamp from localStorage
-      const storedMissionString = localStorage.getItem(STORAGE_KEY);
-      const storedTimestampString = localStorage.getItem(STORAGE_TIME_KEY);
+      const storedMissionString = localStorage.getItem(STORAGE_MISSION_KEY);
+      const storedTimestampString = localStorage.getItem(STORAGE_TIMESTAMP_KEY);
       const storedTimestamp = storedTimestampString
         ? parseInt(storedTimestampString)
         : null;
 
       if (storedMissionString && isMissionFresh(storedTimestamp)) {
-        // Use stored mission
         setDailyMission(JSON.parse(storedMissionString));
       } else {
-        // Fetch new mission
         const mission = await fetchRandomDailyMission();
-        // Store mission and timestamp in localStorage
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(mission));
-        localStorage.setItem(STORAGE_TIME_KEY, Date.now().toString());
+        localStorage.setItem(STORAGE_MISSION_KEY, JSON.stringify(mission));
+        localStorage.setItem(STORAGE_TIMESTAMP_KEY, Date.now().toString());
         setDailyMission(mission);
       }
     } catch (error) {
-      console.error("Error loading daily mission:", error);
+      console.error("Failed to load daily mission:", error);
       setDailyMission(null);
     } finally {
       setIsLoading(false);
     }
   }
 
-  // Fetch a random recipe for daily mission from Spoonacular API
+  // Fetch random recipe for daily mission from Spoonacular
   async function fetchRandomDailyMission() {
     const res = await fetch(
       `https://api.spoonacular.com/recipes/random?apiKey=${API_KEY}&number=1&tags=main course`
@@ -138,14 +198,13 @@ export default function Dashboard() {
     const data = await res.json();
     const recipe = data.recipes[0];
 
-    // Build mission object similar to before
-    const mission = {
+    return {
       id: recipe.id,
       title: recipe.title,
       description: recipe.summary
         ? recipe.summary.replace(/<[^>]+>/g, "").slice(0, 120) + "..."
         : "",
-      xpReward: Math.floor((recipe.readyInMinutes || 30) * 3), // XP based on time
+      xpReward: Math.floor((recipe.readyInMinutes || 30) * 3),
       timeEstimate: recipe.readyInMinutes
         ? `${recipe.readyInMinutes} min`
         : "Unknown",
@@ -153,17 +212,15 @@ export default function Dashboard() {
         recipe.readyInMinutes < 25
           ? "Easy"
           : recipe.readyInMinutes < 45
-            ? "Medium"
-            : recipe.readyInMinutes < 90
-              ? "Hard"
-              : "Advanced",
+          ? "Medium"
+          : recipe.readyInMinutes < 90
+          ? "Hard"
+          : "Advanced",
       cuisineType: recipe.cuisines?.[0] || "Global",
     };
-
-    return mission;
   }
 
-  // When user clicks "Start Quest" fetch detailed recipe info (ingredients + instructions)
+  // When user starts quest: fetch detailed recipe info
   async function startQuest() {
     if (!dailyMission) return;
     setIsLoading(true);
@@ -189,20 +246,33 @@ export default function Dashboard() {
     }
   }
 
-  // User finishes cooking, awards XP, resets view
-  async function finishCooking() {
+  // Finish cooking: add XP, check level up, update localStorage
+  function finishCooking() {
     if (!dailyMission) return;
-    const newXP = userXP + dailyMission.xpReward;
+
+    let newXP = userXP + dailyMission.xpReward;
+    let newLevel = userLevel;
+    // Example level-up logic: double XP needed per level (can customize)
+    while (newXP >= xpNeededForLevel(newLevel + 1)) {
+      newLevel += 1;
+    }
+    const newXpToNextLevel = xpNeededForLevel(newLevel + 1) - newXP;
+
     setUserXP(newXP);
+    setUserLevel(newLevel);
+    setXpToNextLevel(newXpToNextLevel);
+    setUserProfileLocal({ xp: newXP, level: newLevel, xpToNextLevel: newXpToNextLevel });
 
-    // Persist XP update (mock)
-    await updateUserXP(newXP);
+    alert(`Congrats! You earned +${dailyMission.xpReward} XP! Your total XP is now ${newXP}.`);
 
-    alert(
-      `Congrats! You earned +${dailyMission.xpReward} XP! Your total XP is now ${newXP}.`
-    );
     setQuestStarted(false);
     setDetailedRecipe(null);
+  }
+
+  // Helper for XP needed for level (simple exponential curve)
+  function xpNeededForLevel(level: number) {
+    if (level <= 1) return 0;
+    return 400 * (2 ** (level - 2)); // example: level 2 needs 400, level 3 800, etc.
   }
 
   return (
@@ -238,8 +308,8 @@ export default function Dashboard() {
           <CardContent>
             <XPProgressBar currentXP={userXP} level={userLevel} />
             <p className="mt-2 text-center text-muted-foreground">
-              {userXP} XP <br />
-              {xpToNextLevel} XP to level {userLevel + 1}
+              Current XP: {userXP} <br />
+              XP to next level: {xpToNextLevel > 0 ? xpToNextLevel : 0}
             </p>
           </CardContent>
         </Card>
@@ -247,7 +317,7 @@ export default function Dashboard() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Daily Mission - either summary card or detailed recipe if quest started */}
+            {/* Daily Mission */}
             {isLoading && <p>Loading daily mission...</p>}
 
             {!isLoading && dailyMission && !questStarted && (
@@ -271,9 +341,7 @@ export default function Dashboard() {
                     <h3 className="text-xl font-semibold mb-2">
                       {dailyMission.title}
                     </h3>
-                    <p className="text-muted-foreground">
-                      {dailyMission.description}
-                    </p>
+                    <p className="text-muted-foreground">{dailyMission.description}</p>
                   </div>
 
                   <div className="flex items-center gap-4 text-sm">
@@ -293,45 +361,127 @@ export default function Dashboard() {
               </Card>
             )}
 
-            {!isLoading && questStarted && detailedRecipe && (
-              <Card className="shadow-card">
-                <CardHeader className="flex justify-between items-center">
-                  <CardTitle>{detailedRecipe.title}</CardTitle>
-                  <Button variant="outline" onClick={() => setQuestStarted(false)}>
-                    <X className="w-4 h-4" /> Cancel
-                  </Button>
+            {/* Quest Details when started */}
+            {questStarted && detailedRecipe && (
+              <Card className="shadow-card hover:shadow-glow transition-all duration-300">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>{detailedRecipe.title}</CardTitle>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setQuestStarted(false);
+                        setDetailedRecipe(null);
+                      }}
+                      aria-label="Close"
+                    >
+                      <X />
+                    </Button>
+                  </div>
+                  <CardDescription>
+                    {detailedRecipe.description}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <h3 className="text-lg font-semibold mb-2">Ingredients</h3>
-                  <ul className="list-disc pl-5 mb-6">
+                  <h4 className="font-semibold mb-1">Ingredients:</h4>
+                  <ul className="list-disc list-inside mb-4 max-h-48 overflow-auto">
                     {detailedRecipe.ingredients.map((ing: any) => (
-                      <li key={ing.id}>{ing.original}</li>
+                      <li key={ing.id}>
+                        {ing.original}
+                      </li>
                     ))}
                   </ul>
 
-                  <h3 className="text-lg font-semibold mb-2">Instructions</h3>
-                  <ol className="list-decimal pl-5 space-y-2 mb-6">
-                    {detailedRecipe.instructions.length > 0 ? (
-                      detailedRecipe.instructions.map((step: any, idx: number) => (
-                        <li key={idx}>{step.step}</li>
-                      ))
-                    ) : (
-                      <li>No instructions available.</li>
-                    )}
+                  <h4 className="font-semibold mb-1">Instructions:</h4>
+                  <ol className="list-decimal list-inside max-h-64 overflow-auto space-y-2">
+                    {detailedRecipe.instructions.map((step: any) => (
+                      <li key={step.number}>{step.step}</li>
+                    ))}
                   </ol>
 
-                  <Button variant="hero" className="w-full" onClick={finishCooking}>
-                    Finish Cooking (+{dailyMission.xpReward} XP)
+                  <Button
+                    variant="hero"
+                    className="mt-6 w-full"
+                    onClick={finishCooking}
+                  >
+                    Finish Cooking & Earn XP
                   </Button>
                 </CardContent>
               </Card>
             )}
 
-            {!isLoading && !dailyMission && (
-              <p className="text-center text-muted-foreground">
-                Failed to load daily mission. Try refreshing.
-              </p>
-            )}
+            {/* Achievements */}
+            <Card className="shadow-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Star className="w-5 h-5 text-accent" />
+                  Achievements
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {achievementsToShow.map((achievement) => {
+                    const Icon = achievement.icon;
+                    return (
+                      <div
+                        key={achievement.id}
+                        className={`p-4 rounded-lg border transition-all ${
+                          achievement.unlocked
+                            ? "bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/30"
+                            : "bg-muted/50 border-border/50"
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div
+                            className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                              achievement.unlocked
+                                ? "bg-gradient-primary text-primary-foreground"
+                                : "bg-muted text-muted-foreground"
+                            }`}
+                          >
+                            <Icon className="w-5 h-5" />
+                          </div>
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-semibold">{achievement.title}</h4>
+                              {achievement.unlocked && (
+                                <Badge variant="secondary" className="text-xs">
+                                  +{achievement.xp} XP
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {achievement.description}
+                            </p>
+                            {!achievement.unlocked &&
+                              achievement.progress !== undefined && (
+                                <div className="space-y-1">
+                                  <Progress value={achievement.progress} className="h-2" />
+                                  <div className="text-xs text-muted-foreground">
+                                    {achievement.progress}% complete
+                                  </div>
+                                </div>
+                              )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {incompleteAchievements.length > 5 && !showAllAchievements && (
+                    <div className="flex justify-center pt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowAllAchievements(true)}
+                      >
+                        Load More
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Quick Stats */}
             <div className="grid md:grid-cols-4 gap-4">
@@ -355,68 +505,56 @@ export default function Dashboard() {
                 );
               })}
             </div>
-
-            {/* Recent Achievements (empty for new user) */}
-            {recentAchievements.length > 0 && (
-              <Card className="shadow-card">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Trophy className="w-5 h-5 text-accent" />
-                    Recent Achievements
-                  </CardTitle>
-                  <CardDescription>Your latest cooking victories</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {recentAchievements.map((achievement, index) => {
-                      const Icon = achievement.icon;
-                      return (
-                        <div
-                          key={index}
-                          className="flex items-center gap-4 p-3 rounded-lg bg-muted/30"
-                        >
-                          <div className="w-10 h-10 bg-gradient-accent rounded-lg flex items-center justify-center">
-                            <Icon className="w-5 h-5 text-accent-foreground" />
-                          </div>
-                          <div>
-                            <div className="font-semibold">{achievement.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {achievement.description}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Quick Actions */}
+            {/* Level Roadmap */}
             <Card className="shadow-card">
               <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="w-5 h-5 text-primary" />
+                  Level Roadmap
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <Button variant="outline" className="w-full justify-start">
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  Browse Recipes
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <Camera className="w-4 h-4 mr-2" />
-                  Upload Dish
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <Users className="w-4 h-4 mr-2" />
-                  Join Challenge
-                </Button>
-                <Button variant="secondary" className="w-full justify-start">
-                  <Trophy className="w-4 h-4 mr-2" />
-                  View Leaderboard
-                </Button>
+              <CardContent>
+                <div className="space-y-4">
+                  {levels.map((level) => (
+                    <div
+                      key={level.level}
+                      className={`p-4 rounded-lg border transition-all ${
+                        level.current
+                          ? "bg-primary/10 border-primary/30"
+                          : level.level < (currentLevel?.level || 1)
+                          ? "bg-secondary/10 border-secondary/30"
+                          : "bg-muted/50 border-border/50"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                            level.current
+                              ? "bg-gradient-primary text-primary-foreground"
+                              : level.level < (currentLevel?.level || 1)
+                              ? "bg-secondary text-secondary-foreground"
+                              : "bg-muted text-muted-foreground"
+                          }`}
+                        >
+                          {level.level}
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-semibold">{level.title}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {level.level === 1
+                              ? "Starting level"
+                              : `${level.xpRequired} XP required`}
+                          </div>
+                        </div>
+                        {level.current && <Badge variant="default">Current</Badge>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
 

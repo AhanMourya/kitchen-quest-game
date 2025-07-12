@@ -1,3 +1,4 @@
+// Recipe Library with XP & Level System
 import { useState, useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,18 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Search,
-  Clock,
-  Star,
-  Lock,
-  ChefHat,
-  Filter,
-  Grid3X3,
-  List,
-  X
+  Search, Clock, Star, Lock, ChefHat, Filter, Grid3X3, List, X
 } from "lucide-react";
 
-const API_KEY = "d111b78fa08b4cabae59c113e4e86432"; // NEW SPOONACULAR API KEY
+const API_KEY = "fa488b0073f4429dbabd7b229f02d988"; // CURRENT SPOONACULAR API KEY
 
 const cuisineTypes = [
   { id: "african", label: " African", count: 45 },
@@ -48,14 +41,27 @@ const cuisineTypes = [
   { id: "vietnamese", label: " Vietnamese", count: 52 },
 ];
 
-// MOCK: Replace with your real backend fetch to get user's saved XP
-async function fetchUserXP(): Promise<number> {
-  return 0;
+// LocalStorage: XP/level data
+function getUserProfileLocal() {
+  const data = localStorage.getItem('userProfile');
+  if (data) {
+    try {
+      const parsed = JSON.parse(data);
+      return {
+        xp: typeof parsed.xp === 'number' ? parsed.xp : 0,
+        level: typeof parsed.level === 'number' ? parsed.level : 1,
+        xpToNextLevel: typeof parsed.xpToNextLevel === 'number' ? parsed.xpToNextLevel : 400,
+      };
+    } catch {
+      return { xp: 0, level: 1, xpToNextLevel: 400 };
+    }
+  }
+  return { xp: 0, level: 1, xpToNextLevel: 400 };
 }
 
-// MOCK: Replace with your real backend call to update XP
-async function updateUserXP(newXP: number): Promise<void> {
-  console.log("Updating XP on backend to:", newXP);
+function setUserProfileLocal(profile: { xp: number; level: number; xpToNextLevel: number }) {
+  localStorage.setItem('userProfile', JSON.stringify(profile));
+  window.dispatchEvent(new Event('userProfileUpdated'));
 }
 
 export default function Recipes() {
@@ -66,26 +72,31 @@ export default function Recipes() {
   const [showUnlockedOnly, setShowUnlockedOnly] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<any | null>(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [totalResults, setTotalResults] = useState<number | null>(null);
 
-  // USER XP STATE
-  const [userXP, setUserXP] = useState(0);
+  const [userXP, setUserXP] = useState(() => getUserProfileLocal().xp);
+  const [userLevel, setUserLevel] = useState(() => getUserProfileLocal().level);
+  const [xpToNextLevel, setXpToNextLevel] = useState(() => getUserProfileLocal().xpToNextLevel);
 
   useEffect(() => {
-    fetchUserXP().then((xp) => setUserXP(xp));
+    const { xp, level, xpToNextLevel } = getUserProfileLocal();
+    setUserXP(xp);
+    setUserLevel(level);
+    setXpToNextLevel(xpToNextLevel);
   }, []);
+
+  useEffect(() => {
+    fetchRecipes(selectedCuisines);
+  }, [selectedCuisines]);
 
   const fetchRecipes = async (cuisineList: string[]) => {
     try {
       const cuisineParam = cuisineList.length > 0 ? `&cuisine=${cuisineList.join(",")}` : "";
       const url = `https://api.spoonacular.com/recipes/complexSearch?apiKey=${API_KEY}&number=18&addRecipeInformation=true${cuisineParam}`;
-
       const res = await fetch(url);
       const data = await res.json();
 
-      if (!data || !data.results || data.results.length === 0) {
-        setRecipes([]);
-        return;
-      }
+      setTotalResults(typeof data.totalResults === "number" ? data.totalResults : null);
 
       const mapped = data.results.map((recipe: any) => ({
         id: recipe.id,
@@ -102,37 +113,67 @@ export default function Recipes() {
         time: `${recipe.readyInMinutes} min`,
         xp: Math.floor(recipe.readyInMinutes * 2),
         rating: recipe.spoonacularScore ? (recipe.spoonacularScore / 20).toFixed(1) : "4.5",
-        image: recipe.image || null,
+        image: recipe.image,
         isLocked: Math.random() < 0.25,
         description: recipe.summary?.replace(/<[^>]+>/g, "").slice(0, 120) + "..."
       }));
 
       setRecipes(mapped);
-    } catch (error) {
-      console.error("Failed to fetch recipes", error);
-      setRecipes([]);
+    } catch (err) {
+      console.error("Error fetching recipes", err);
     }
   };
 
-  useEffect(() => {
-    fetchRecipes(selectedCuisines);
-  }, [selectedCuisines]);
+  const fetchRecipeDetails = async (recipe: any) => {
+    try {
+      setIsLoadingDetails(true);
+      const res = await fetch(`https://api.spoonacular.com/recipes/${recipe.id}/information?apiKey=${API_KEY}`);
+      const data = await res.json();
 
-  // Apply all filters and search
+      setSelectedRecipe({
+        ...recipe,
+        ingredients: data.extendedIngredients || [],
+        instructions: data.analyzedInstructions?.[0]?.steps || []
+      });
+    } catch (err) {
+      console.error("Failed to fetch full recipe", err);
+    } finally {
+      setIsLoadingDetails(false);
+    }
+  };
+
+  const handleCuisineToggle = (id: string) => {
+    setSelectedCuisines(prev =>
+      prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
+    );
+  };
+
+  const handleFinishCooking = () => {
+    if (!selectedRecipe) return;
+    let newXP = userXP + selectedRecipe.xp;
+    let newLevel = userLevel;
+    let nextLevelXP = 400 * (2 ** newLevel - 1) - newXP;
+
+    if (nextLevelXP <= 0) {
+      newLevel++;
+      nextLevelXP = 400 * (2 ** newLevel - 1);
+    }
+
+    setUserXP(newXP);
+    setUserLevel(newLevel);
+    setXpToNextLevel(nextLevelXP);
+
+    setUserProfileLocal({ xp: newXP, level: newLevel, xpToNextLevel: nextLevelXP });
+
+    alert(`Congrats! You earned +${selectedRecipe.xp} XP! Your total XP is now ${newXP}.`);
+    setSelectedRecipe(null);
+  };
+
   const filteredRecipes = recipes.filter(recipe => {
-    const matchesSearch = recipe.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      recipe.cuisine.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = recipe.title.toLowerCase().includes(searchQuery.toLowerCase()) || recipe.cuisine.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesLock = !showUnlockedOnly || !recipe.isLocked;
     return matchesSearch && matchesLock;
   });
-
-  const handleCuisineToggle = (cuisineId: string) => {
-    setSelectedCuisines(prev =>
-      prev.includes(cuisineId)
-        ? prev.filter(id => id !== cuisineId)
-        : [...prev, cuisineId]
-    );
-  };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -144,92 +185,61 @@ export default function Recipes() {
     }
   };
 
-  const handleFinishCooking = async () => {
-    if (!selectedRecipe) return;
-    const newXP = userXP + selectedRecipe.xp;
-    setUserXP(newXP);
-
-    await updateUserXP(newXP);
-
-    setSelectedRecipe(null);
-    alert(`Congrats! You earned +${selectedRecipe.xp} XP! Your total XP is now ${newXP}.`);
-  };
-
   return (
     <div className="flex min-h-screen bg-background">
       <Navigation />
       <main className="flex-1 p-8">
         {!selectedRecipe ? (
           <>
-            {/* Top Section */}
             <div className="mb-8">
               <h1 className="text-3xl font-bold mb-2">Recipe Library</h1>
               <p className="text-muted-foreground">Discover, cook, and master delicious recipes from around the world</p>
-              <p className="mt-1 text-sm text-primary font-semibold">Your XP: {userXP}</p>
+              <p className="mt-1 text-sm text-primary font-semibold">Your XP: {userXP} | Level: {userLevel}</p>
             </div>
 
-            {/* Main Body */}
             <div className="flex gap-8">
-              {/* Sidebar */}
               <div className="w-80 space-y-6">
-                {/* Search */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Search className="w-5 h-5" />Search Recipes</CardTitle>
-                  </CardHeader>
+                  <CardHeader><CardTitle className="flex items-center gap-2"><Search className="w-5 h-5" />Search Recipes</CardTitle></CardHeader>
                   <CardContent>
-                    <Input
-                      placeholder="Search for recipes..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
+                    <Input placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
                   </CardContent>
                 </Card>
 
-                {/* Filters */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Filter className="w-5 h-5" />Cuisine Types</CardTitle>
-                  </CardHeader>
+                  <CardHeader><CardTitle className="flex items-center gap-2"><Filter className="w-5 h-5" />Cuisine Types</CardTitle></CardHeader>
                   <CardContent className="space-y-3">
-                    {cuisineTypes.map(cuisine => (
-                      <div key={cuisine.id} className="flex justify-between items-center">
+                    {cuisineTypes.map(c => (
+                      <div key={c.id} className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
-                          <Checkbox
-                            id={cuisine.id}
-                            checked={selectedCuisines.includes(cuisine.id)}
-                            onCheckedChange={() => handleCuisineToggle(cuisine.id)}
-                          />
-                          <label htmlFor={cuisine.id} className="text-sm font-medium">{cuisine.label}</label>
+                          <Checkbox id={c.id} checked={selectedCuisines.includes(c.id)} onCheckedChange={() => handleCuisineToggle(c.id)} />
+                          <label htmlFor={c.id} className="text-sm font-medium">{c.label}</label>
                         </div>
-                        <Badge variant="outline" className="text-xs">{cuisine.count}</Badge>
+                        <Badge variant="outline" className="text-xs">{c.count}</Badge>
                       </div>
                     ))}
                   </CardContent>
                 </Card>
 
-                {/* Options */}
                 <Card>
                   <CardHeader><CardTitle>Options</CardTitle></CardHeader>
                   <CardContent>
                     <div className="flex items-center gap-2">
-                      <Checkbox
-                        id="unlocked-only"
-                        checked={showUnlockedOnly}
-                        onCheckedChange={(v) => setShowUnlockedOnly(v === true)}
-                      />
-                      <label htmlFor="unlocked-only" className="text-sm font-medium">Unlocked recipes only</label>
+                      <Checkbox id="unlocked-only" checked={showUnlockedOnly} onCheckedChange={(v) => setShowUnlockedOnly(v === true)} />
+                      <label htmlFor="unlocked-only" className="text-sm font-medium">Unlocked only</label>
                     </div>
                   </CardContent>
                 </Card>
               </div>
 
-              {/* Recipe Cards */}
               <div className="flex-1">
                 <div className="flex justify-between items-center mb-6">
-                  <span className="text-sm text-muted-foreground">
-                    Showing {filteredRecipes.length} recipes
-                  </span>
+                  <div>
+                    <span className="text-sm text-muted-foreground">Showing {filteredRecipes.length} recipes</span>
+                    {typeof totalResults === 'number' && (
+                      <span className="ml-3 text-xs bg-accent px-2 py-1 rounded">Total: {totalResults}</span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2">
                     <Button variant={viewMode === "grid" ? "default" : "outline"} onClick={() => setViewMode("grid")} size="sm"><Grid3X3 className="w-4 h-4" /></Button>
                     <Button variant={viewMode === "list" ? "default" : "outline"} onClick={() => setViewMode("list")} size="sm"><List className="w-4 h-4" /></Button>
@@ -240,12 +250,8 @@ export default function Recipes() {
                   {filteredRecipes.map(recipe => (
                     <Card key={recipe.id} className={`shadow-card group transition-all duration-300 ${recipe.isLocked ? "opacity-75" : "hover:-translate-y-1"}`}>
                       <div className="relative">
-                        <div className="aspect-video bg-muted overflow-hidden rounded-t-lg flex items-center justify-center">
-                          {recipe.image ? (
-                            <img src={recipe.image} alt={recipe.title} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="text-gray-500 italic">Image not available</div>
-                          )}
+                        <div className="aspect-video bg-muted overflow-hidden rounded-t-lg">
+                          <img src={recipe.image} alt={recipe.title} className="w-full h-full object-cover" />
                         </div>
                         {recipe.isLocked && (
                           <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-t-lg">
@@ -286,13 +292,8 @@ export default function Recipes() {
             </div>
           </>
         ) : (
-          // Detailed recipe view
           <div className="max-w-4xl mx-auto">
-            <Button
-              variant="outline"
-              className="mb-4"
-              onClick={() => setSelectedRecipe(null)}
-            >
+            <Button variant="outline" className="mb-4" onClick={() => setSelectedRecipe(null)}>
               <X className="w-4 h-4 mr-2" /> Back to recipes
             </Button>
 
@@ -303,15 +304,7 @@ export default function Recipes() {
               </CardHeader>
               <CardContent>
                 <div className="mb-6">
-                  {selectedRecipe.image ? (
-                    <img
-                      src={selectedRecipe.image}
-                      alt={selectedRecipe.title}
-                      className="w-full rounded-lg"
-                    />
-                  ) : (
-                    <div className="text-gray-500 italic">Image not available</div>
-                  )}
+                  <img src={selectedRecipe.image} alt={selectedRecipe.title} className="w-full rounded-lg" />
                 </div>
 
                 <h3 className="text-lg font-semibold mb-2">Ingredients</h3>
@@ -327,16 +320,10 @@ export default function Recipes() {
                     ? selectedRecipe.instructions.map((step: any, idx: number) => (
                       <li key={idx}>{step.step}</li>
                     ))
-                    : <li>No instructions available.</li>
-                  }
+                    : <li>No instructions available.</li>}
                 </ol>
 
-                <Button
-                  variant="hero"
-                  className="w-full"
-                  onClick={handleFinishCooking}
-                  disabled={isLoadingDetails}
-                >
+                <Button variant="hero" className="w-full" onClick={handleFinishCooking} disabled={isLoadingDetails}>
                   {isLoadingDetails ? "Saving XP..." : `Finish Cooking (+${selectedRecipe.xp} XP)`}
                 </Button>
               </CardContent>
@@ -346,25 +333,4 @@ export default function Recipes() {
       </main>
     </div>
   );
-
-  // fetchRecipeDetails function inside component, since used on button click
-  async function fetchRecipeDetails(recipe: any) {
-    try {
-      setIsLoadingDetails(true);
-      const res = await fetch(`https://api.spoonacular.com/recipes/${recipe.id}/information?apiKey=${API_KEY}`);
-      const data = await res.json();
-
-      const detailedRecipe = {
-        ...recipe,
-        ingredients: data.extendedIngredients || [],
-        instructions: data.analyzedInstructions?.[0]?.steps || []
-      };
-
-      setSelectedRecipe(detailedRecipe);
-    } catch (err) {
-      console.error("Failed to fetch full recipe", err);
-    } finally {
-      setIsLoadingDetails(false);
-    }
-  }
 }

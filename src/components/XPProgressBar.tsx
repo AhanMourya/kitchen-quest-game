@@ -18,17 +18,37 @@ export function XPProgressBar({
 }: XPProgressBarProps) {
   const [displayXP, setDisplayXP] = useState(0);
   
-  const currentLevelXP = (level - 1) * 200;
-  const nextLevelXP = level * 200;
+  // Helper to get current XP from localStorage (matches Recipes/Dashboard logic)
+  function getUserProfileLocal(): { xp: number; level: number; xpToNextLevel: number } {
+    const data = localStorage.getItem('userProfile');
+    if (data) {
+      try {
+        const parsed = JSON.parse(data);
+        return {
+          xp: typeof parsed.xp === 'number' ? parsed.xp : 0,
+          level: typeof parsed.level === 'number' ? parsed.level : 1,
+          xpToNextLevel: typeof parsed.xpToNextLevel === 'number' ? parsed.xpToNextLevel : 400,
+        };
+      } catch {
+        // fallback to default if corrupted
+      }
+    }
+    return { xp: 0, level: 1, xpToNextLevel: 400 };
+  }
+
+  // Use XP from localStorage if available, otherwise fallback to prop
+  const localXP = getUserProfileLocal().xp;
+  const currentLevelXP = localXP;
+  const nextLevelXP = 400 * (2 ** level - 1);
   const xpForThisLevel = currentXP - currentLevelXP;
   const xpNeededForThisLevel = nextLevelXP - currentLevelXP;
-  const progressPercentage = Math.min((xpForThisLevel / xpNeededForThisLevel) * 100, 100);
+  const progressPercentage = Math.min((currentLevelXP / nextLevelXP) * 100, 100);
 
   useEffect(() => {
     if (animated) {
       const timer = setTimeout(() => {
         setDisplayXP(progressPercentage);
-      }, 300);
+      }, 100);
       return () => clearTimeout(timer);
     } else {
       setDisplayXP(progressPercentage);
@@ -43,7 +63,7 @@ export function XPProgressBar({
             Level {level}
           </span>
           <span className="text-xs text-muted-foreground">
-            {xpForThisLevel}/{xpNeededForThisLevel} XP
+            {currentLevelXP}/{nextLevelXP} XP
           </span>
         </div>
       )}
