@@ -17,27 +17,44 @@ import {
   X
 } from "lucide-react";
 
-const API_KEY = "11e83c6ceb5b450b9f8da21d23d7bab4"; // YOUR SPOONACULAR API KEY
+const API_KEY = "d111b78fa08b4cabae59c113e4e86432"; // NEW SPOONACULAR API KEY
 
 const cuisineTypes = [
-  { id: "italian", label: "🍕 Italian", count: 45 },
-  { id: "indian", label: "🍛 Indian", count: 38 },
-  { id: "mexican", label: "🌮 Mexican", count: 32 },
-  { id: "japanese", label: "🍣 Japanese", count: 29 },
-  { id: "french", label: "🧀 French", count: 25 },
-  { id: "vegan", label: "🌱 Vegan", count: 52 },
+  { id: "african", label: " African", count: 45 },
+  { id: "asian", label: " Asian", count: 38 },
+  { id: "american", label: " American", count: 32 },
+  { id: "british", label: " British", count: 29 },
+  { id: "cajun", label: " Cajun", count: 25 },
+  { id: "caribbean", label: " Caribbean", count: 52 },
+  { id: "eastern_european", label: " Eastern European", count: 52 },
+  { id: "european", label: " European", count: 52 },
+  { id: "french", label: " French", count: 52 },
+  { id: "german", label: " German", count: 52 },
+  { id: "greek", label: " Greek", count: 52 },
+  { id: "indian", label: " Indian", count: 52 },
+  { id: "irish", label: " Irish", count: 52 },
+  { id: "italian", label: " Italian", count: 52 },
+  { id: "japanese", label: " Japanese", count: 52 },
+  { id: "jewish", label: " Jewish", count: 52 },
+  { id: "korean", label: " Korean", count: 52 },
+  { id: "latin_american", label: " Latin American", count: 52 },
+  { id: "mediterranean", label: " Mediterranean", count: 52 },
+  { id: "mexican", label: " Mexican", count: 52 },
+  { id: "middle_eastern", label: " Middle Eastern", count: 52 },
+  { id: "nordic", label: " Nordic", count: 52 },
+  { id: "Southern", label: " Southern", count: 52 },
+  { id: "spanish", label: " Spanish", count: 52 },
+  { id: "thai", label: " Thai", count: 52 },
+  { id: "vietnamese", label: " Vietnamese", count: 52 },
 ];
 
 // MOCK: Replace with your real backend fetch to get user's saved XP
 async function fetchUserXP(): Promise<number> {
-  // Example: fetch('/api/user/xp').then(r => r.json()).then(data => data.xp)
-  // For now, return 0 as starting point
   return 0;
 }
 
 // MOCK: Replace with your real backend call to update XP
 async function updateUserXP(newXP: number): Promise<void> {
-  // Example: await fetch('/api/user/xp', { method: 'POST', body: JSON.stringify({ xp: newXP }) })
   console.log("Updating XP on backend to:", newXP);
 }
 
@@ -53,7 +70,6 @@ export default function Recipes() {
   // USER XP STATE
   const [userXP, setUserXP] = useState(0);
 
-  // On mount, fetch user XP from backend (e.g. Google login tied DB)
   useEffect(() => {
     fetchUserXP().then((xp) => setUserXP(xp));
   }, []);
@@ -62,13 +78,19 @@ export default function Recipes() {
     try {
       const cuisineParam = cuisineList.length > 0 ? `&cuisine=${cuisineList.join(",")}` : "";
       const url = `https://api.spoonacular.com/recipes/complexSearch?apiKey=${API_KEY}&number=18&addRecipeInformation=true${cuisineParam}`;
+
       const res = await fetch(url);
       const data = await res.json();
+
+      if (!data || !data.results || data.results.length === 0) {
+        setRecipes([]);
+        return;
+      }
 
       const mapped = data.results.map((recipe: any) => ({
         id: recipe.id,
         title: recipe.title,
-        cuisine: recipe.cuisines[0] || "Global",
+        cuisine: recipe.cuisines?.[0] || "Global",
         difficulty:
           recipe.readyInMinutes < 25
             ? "Easy"
@@ -79,8 +101,8 @@ export default function Recipes() {
                 : "Advanced",
         time: `${recipe.readyInMinutes} min`,
         xp: Math.floor(recipe.readyInMinutes * 2),
-        rating: recipe.spoonacularScore ? (recipe.spoonacularScore / 20).toFixed(1) : 4.5,
-        image: recipe.image,
+        rating: recipe.spoonacularScore ? (recipe.spoonacularScore / 20).toFixed(1) : "4.5",
+        image: recipe.image || null,
         isLocked: Math.random() < 0.25,
         description: recipe.summary?.replace(/<[^>]+>/g, "").slice(0, 120) + "..."
       }));
@@ -88,26 +110,7 @@ export default function Recipes() {
       setRecipes(mapped);
     } catch (error) {
       console.error("Failed to fetch recipes", error);
-    }
-  };
-
-  const fetchRecipeDetails = async (recipe: any) => {
-    try {
-      setIsLoadingDetails(true);
-      const res = await fetch(`https://api.spoonacular.com/recipes/${recipe.id}/information?apiKey=${API_KEY}`);
-      const data = await res.json();
-
-      const detailedRecipe = {
-        ...recipe,
-        ingredients: data.extendedIngredients || [],
-        instructions: data.analyzedInstructions?.[0]?.steps || []
-      };
-
-      setSelectedRecipe(detailedRecipe);
-    } catch (err) {
-      console.error("Failed to fetch full recipe", err);
-    } finally {
-      setIsLoadingDetails(false);
+      setRecipes([]);
     }
   };
 
@@ -115,6 +118,7 @@ export default function Recipes() {
     fetchRecipes(selectedCuisines);
   }, [selectedCuisines]);
 
+  // Apply all filters and search
   const filteredRecipes = recipes.filter(recipe => {
     const matchesSearch = recipe.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       recipe.cuisine.toLowerCase().includes(searchQuery.toLowerCase());
@@ -140,13 +144,11 @@ export default function Recipes() {
     }
   };
 
-  // XP awarding logic on finishing cooking
   const handleFinishCooking = async () => {
     if (!selectedRecipe) return;
     const newXP = userXP + selectedRecipe.xp;
     setUserXP(newXP);
 
-    // Save XP to backend (persist for logged-in user)
     await updateUserXP(newXP);
 
     setSelectedRecipe(null);
@@ -225,7 +227,9 @@ export default function Recipes() {
               {/* Recipe Cards */}
               <div className="flex-1">
                 <div className="flex justify-between items-center mb-6">
-                  <span className="text-sm text-muted-foreground">Showing {filteredRecipes.length} recipes</span>
+                  <span className="text-sm text-muted-foreground">
+                    Showing {filteredRecipes.length} recipes
+                  </span>
                   <div className="flex items-center gap-2">
                     <Button variant={viewMode === "grid" ? "default" : "outline"} onClick={() => setViewMode("grid")} size="sm"><Grid3X3 className="w-4 h-4" /></Button>
                     <Button variant={viewMode === "list" ? "default" : "outline"} onClick={() => setViewMode("list")} size="sm"><List className="w-4 h-4" /></Button>
@@ -236,8 +240,12 @@ export default function Recipes() {
                   {filteredRecipes.map(recipe => (
                     <Card key={recipe.id} className={`shadow-card group transition-all duration-300 ${recipe.isLocked ? "opacity-75" : "hover:-translate-y-1"}`}>
                       <div className="relative">
-                        <div className="aspect-video bg-muted overflow-hidden rounded-t-lg">
-                          <img src={recipe.image} alt={recipe.title} className="w-full h-full object-cover" />
+                        <div className="aspect-video bg-muted overflow-hidden rounded-t-lg flex items-center justify-center">
+                          {recipe.image ? (
+                            <img src={recipe.image} alt={recipe.title} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="text-gray-500 italic">Image not available</div>
+                          )}
                         </div>
                         {recipe.isLocked && (
                           <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-t-lg">
@@ -295,11 +303,15 @@ export default function Recipes() {
               </CardHeader>
               <CardContent>
                 <div className="mb-6">
-                  <img
-                    src={selectedRecipe.image}
-                    alt={selectedRecipe.title}
-                    className="w-full rounded-lg"
-                  />
+                  {selectedRecipe.image ? (
+                    <img
+                      src={selectedRecipe.image}
+                      alt={selectedRecipe.title}
+                      className="w-full rounded-lg"
+                    />
+                  ) : (
+                    <div className="text-gray-500 italic">Image not available</div>
+                  )}
                 </div>
 
                 <h3 className="text-lg font-semibold mb-2">Ingredients</h3>
@@ -334,4 +346,25 @@ export default function Recipes() {
       </main>
     </div>
   );
+
+  // fetchRecipeDetails function inside component, since used on button click
+  async function fetchRecipeDetails(recipe: any) {
+    try {
+      setIsLoadingDetails(true);
+      const res = await fetch(`https://api.spoonacular.com/recipes/${recipe.id}/information?apiKey=${API_KEY}`);
+      const data = await res.json();
+
+      const detailedRecipe = {
+        ...recipe,
+        ingredients: data.extendedIngredients || [],
+        instructions: data.analyzedInstructions?.[0]?.steps || []
+      };
+
+      setSelectedRecipe(detailedRecipe);
+    } catch (err) {
+      console.error("Failed to fetch full recipe", err);
+    } finally {
+      setIsLoadingDetails(false);
+    }
+  }
 }
