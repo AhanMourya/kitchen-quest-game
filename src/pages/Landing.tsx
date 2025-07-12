@@ -38,7 +38,7 @@ export default function Landing() {
               <ChefHat className="w-6 h-6 text-primary-foreground" />
             </div>
             <h1 className="text-2xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-              LevelUp Kitchen
+              CookUp Kitchen
             </h1>
           </div>
           
@@ -78,25 +78,26 @@ export default function Landing() {
                   <Sparkles className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
-              
+              {/*}
               <Button variant="outline" size="lg" className="text-lg">
                 <Play className="w-5 h-5 mr-2" />
                 Watch Demo
-              </Button>
+              </Button> 
+              */}
             </div>
 
             <div className="flex items-center gap-8 pt-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">10K+</div>
-                <div className="text-sm text-muted-foreground">Active Chefs</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-secondary">500+</div>
+                <div className="text-2xl font-bold text-primary">100K+</div>
                 <div className="text-sm text-muted-foreground">Recipes</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-accent">50+</div>
-                <div className="text-sm text-muted-foreground">Achievements</div>
+                <div className="text-2xl font-bold text-secondary">10+</div>
+                <div className="text-sm text-muted-foreground">Acheviements</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-accent">∞</div>
+                <div className="text-sm text-muted-foreground">Fun</div>
               </div>
             </div>
           </div>
@@ -144,24 +145,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="bg-gradient-hero py-20">
-        <div className="container mx-auto px-6 text-center">
-          <div className="space-y-6 text-white">
-            <h3 className="text-4xl font-bold">Ready to Start Cooking?</h3>
-            <p className="text-xl opacity-90 max-w-2xl mx-auto">
-              Join thousands of chefs already leveling up their kitchen skills. 
-              Your culinary adventure begins now!
-            </p>
-            <Link to="/signup">
-              <Button variant="secondary" size="lg" className="text-lg px-8">
-                Create Your Chef Profile
-                <ChefHat className="w-5 h-5 ml-2" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
 
       {/* Developer Navigation - Temporary */}
       <section className="bg-muted/50 py-8 border-t border-dashed border-muted-foreground/30">
@@ -197,13 +180,12 @@ export default function Landing() {
                 <ChefHat className="w-5 h-5 text-primary-foreground" />
               </div>
               <span className="text-lg font-semibold bg-gradient-hero bg-clip-text text-transparent">
-                LevelUp Kitchen
+                CookUp Kitchen
               </span>
             </div>
           </div>
-          <p className="text-center text-muted-foreground mt-4">
-            © 2024 LevelUp Kitchen. Level up your cooking game.
-          </p>
+           <p className="text-center text-muted-foreground mt-4">
+          </p> 
         </div>
       </footer>
     </div>
