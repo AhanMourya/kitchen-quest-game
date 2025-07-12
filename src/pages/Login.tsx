@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChefHat, Mail, Lock } from "lucide-react";
+import { AuthButton } from "@/components/ui/AuthButton";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -38,7 +39,7 @@ export default function Login() {
               Enter your credentials to access your kitchen
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
@@ -56,7 +57,7 @@ export default function Login() {
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
@@ -74,8 +75,8 @@ export default function Login() {
               </div>
 
               <div className="flex items-center justify-between">
-                <Link 
-                  to="/forgot-password" 
+                <Link
+                  to="/forgot-password"
                   className="text-sm text-primary hover:underline"
                 >
                   Forgot password?
@@ -86,6 +87,18 @@ export default function Login() {
                 Sign In to Kitchen
               </Button>
             </form>
+
+            {/* OR separator */}
+            <div className="my-6 border-t border-gray-300 relative">
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white px-4 text-sm text-gray-500">
+                OR
+              </span>
+            </div>
+
+            {/* Google Sign-In Button */}
+            <div className="flex justify-center">
+              <AuthButton />
+            </div>
 
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">

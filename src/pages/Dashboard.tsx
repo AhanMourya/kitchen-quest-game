@@ -1,20 +1,36 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { XPProgressBar } from "@/components/XPProgressBar";
 import { Navigation } from "@/components/Navigation";
-import { 
-  Star, 
-  Trophy, 
-  BookOpen, 
-  Camera, 
-  Users, 
+import {
+  Star,
+  Trophy,
+  BookOpen,
+  Camera,
+  Users,
   Clock,
   ChefHat,
   Flame,
   Target
 } from "lucide-react";
+
+// MOCK: Replace with your real backend fetch to get user's XP, level, etc.
+async function fetchUserXP(): Promise<{ xp: number; level: number; xpToNextLevel: number }> {
+  // For now, return static example data
+  return {
+    xp: 100,
+    level: 1,
+    xpToNextLevel: 400,
+  };
+}
+
+// MOCK: Replace with your real backend call to update XP
+async function updateUserXP(newXP: number): Promise<void> {
+  console.log("Updating XP on backend to:", newXP);
+}
 
 const dailyMission = {
   title: "Spicy Thai Green Curry",
@@ -25,27 +41,48 @@ const dailyMission = {
   cuisineType: "Thai"
 };
 
-const recentAchievements = [
-  { name: "First Flame", description: "Completed your first recipe", icon: Flame },
-  { name: "Spice Master", description: "Cooked 5 spicy dishes", icon: ChefHat },
-  { name: "Quick Cook", description: "Finished recipe under time limit", icon: Clock },
-];
-
-const quickStats = [
-  { label: "Recipes Completed", value: 23, icon: BookOpen },
-  { label: "Classes Mastered", value: 3, icon: Trophy },
-  { label: "Badges Earned", value: 12, icon: Star },
-  { label: "Community Votes", value: 45, icon: Users },
-];
-
 export default function Dashboard() {
-  const userXP = 1250;
-  const userLevel = 8;
-  
+  // Use state for user stats
+  const [userXP, setUserXP] = useState(0);
+  const [userLevel, setUserLevel] = useState(1);
+  const [xpToNextLevel, setXpToNextLevel] = useState(400);
+
+  // Fetch user XP on mount
+  useEffect(() => {
+    fetchUserXP().then(({ xp, level, xpToNextLevel }) => {
+      setUserXP(xp);
+      setUserLevel(level);
+      setXpToNextLevel(xpToNextLevel);
+    });
+  }, []);
+
+  const quickStats = [
+    { label: "Recipes Completed", value: 1, icon: BookOpen },
+    { label: "Classes Mastered", value: 1, icon: Trophy },
+    { label: "Badges Earned", value: 1, icon: Star },
+    { label: "Community Votes", value: 1, icon: Users },
+  ];
+
+  // Empty recent achievements for a new user
+  const recentAchievements: { name: string; description: string; icon: React.FC<any>; }[] = [];
+
+  // Example handler for "completing" the daily mission — adds XP
+  const handleCompleteMission = async () => {
+    const newXP = userXP + dailyMission.xpReward;
+
+    // For demo, keep level and xpToNextLevel static; real logic may update these
+    setUserXP(newXP);
+
+    // Persist XP to backend
+    await updateUserXP(newXP);
+
+    alert(`Congrats! You earned +${dailyMission.xpReward} XP! Your total XP is now ${newXP}.`);
+  };
+
   return (
     <div className="flex min-h-screen bg-background">
       <Navigation />
-      
+
       <main className="flex-1 p-8">
         {/* Welcome Header */}
         <div className="mb-8">
@@ -72,6 +109,10 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <XPProgressBar currentXP={userXP} level={userLevel} />
+            <p className="mt-2 text-center text-muted-foreground">
+              {userXP} XP <br />
+              {xpToNextLevel} XP to level {userLevel + 1}
+            </p>
           </CardContent>
         </Card>
 
@@ -97,7 +138,7 @@ export default function Dashboard() {
                   <h3 className="text-xl font-semibold mb-2">{dailyMission.title}</h3>
                   <p className="text-muted-foreground">{dailyMission.description}</p>
                 </div>
-                
+
                 <div className="flex items-center gap-4 text-sm">
                   <Badge variant="outline">{dailyMission.cuisineType}</Badge>
                   <Badge variant="outline">{dailyMission.difficulty}</Badge>
@@ -106,8 +147,8 @@ export default function Dashboard() {
                     {dailyMission.timeEstimate}
                   </div>
                 </div>
-                
-                <Button variant="hero" className="w-full">
+
+                <Button variant="hero" className="w-full" onClick={handleCompleteMission}>
                   Start Quest
                   <ChefHat className="w-4 h-4 ml-2" />
                 </Button>
@@ -132,34 +173,36 @@ export default function Dashboard() {
               })}
             </div>
 
-            {/* Recent Achievements */}
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="w-5 h-5 text-accent" />
-                  Recent Achievements
-                </CardTitle>
-                <CardDescription>Your latest cooking victories</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recentAchievements.map((achievement, index) => {
-                    const Icon = achievement.icon;
-                    return (
-                      <div key={index} className="flex items-center gap-4 p-3 rounded-lg bg-muted/30">
-                        <div className="w-10 h-10 bg-gradient-accent rounded-lg flex items-center justify-center">
-                          <Icon className="w-5 h-5 text-accent-foreground" />
+            {/* Recent Achievements (empty for new user) */}
+            {recentAchievements.length > 0 && (
+              <Card className="shadow-card">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-accent" />
+                    Recent Achievements
+                  </CardTitle>
+                  <CardDescription>Your latest cooking victories</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {recentAchievements.map((achievement, index) => {
+                      const Icon = achievement.icon;
+                      return (
+                        <div key={index} className="flex items-center gap-4 p-3 rounded-lg bg-muted/30">
+                          <div className="w-10 h-10 bg-gradient-accent rounded-lg flex items-center justify-center">
+                            <Icon className="w-5 h-5 text-accent-foreground" />
+                          </div>
+                          <div>
+                            <div className="font-semibold">{achievement.name}</div>
+                            <div className="text-sm text-muted-foreground">{achievement.description}</div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-semibold">{achievement.name}</div>
-                          <div className="text-sm text-muted-foreground">{achievement.description}</div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -203,7 +246,7 @@ export default function Dashboard() {
                     <Progress value={75} className="h-2" />
                     <div className="text-xs text-muted-foreground mt-1">Step 3 of 4</div>
                   </div>
-                  
+
                   <div className="p-3 rounded-lg border border-border">
                     <div className="font-medium text-sm">Miso Soup</div>
                     <div className="text-xs text-muted-foreground mb-2">Japanese • 15 min</div>

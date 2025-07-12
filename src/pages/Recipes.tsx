@@ -1,20 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { 
-  Search, 
-  Clock, 
-  Star, 
-  Lock, 
+import {
+  Search,
+  Clock,
+  Star,
+  Lock,
   ChefHat,
   Filter,
   Grid3X3,
-  List
+  List,
+  X
 } from "lucide-react";
+
+const API_KEY = "11e83c6ceb5b450b9f8da21d23d7bab4"; // YOUR SPOONACULAR API KEY
 
 const cuisineTypes = [
   { id: "italian", label: "🍕 Italian", count: 45 },
@@ -25,102 +28,103 @@ const cuisineTypes = [
   { id: "vegan", label: "🌱 Vegan", count: 52 },
 ];
 
-const recipes = [
-  {
-    id: 1,
-    title: "Spicy Thai Green Curry",
-    cuisine: "Thai",
-    difficulty: "Medium",
-    time: "45 min",
-    xp: 150,
-    rating: 4.8,
-    image: "/api/placeholder/300/200",
-    isLocked: false,
-    description: "Authentic Thai green curry with coconut milk and fresh herbs"
-  },
-  {
-    id: 2,
-    title: "Classic Pasta Carbonara",
-    cuisine: "Italian",
-    difficulty: "Easy",
-    time: "20 min",
-    xp: 80,
-    rating: 4.9,
-    image: "/api/placeholder/300/200",
-    isLocked: false,
-    description: "Traditional Roman pasta dish with eggs, cheese, and pancetta"
-  },
-  {
-    id: 3,
-    title: "Beef Wellington",
-    cuisine: "British",
-    difficulty: "Advanced",
-    time: "2 hours",
-    xp: 300,
-    rating: 4.7,
-    image: "/api/placeholder/300/200",
-    isLocked: true,
-    description: "Gordon Ramsay's signature dish wrapped in puff pastry"
-  },
-  {
-    id: 4,
-    title: "Chicken Tikka Masala",
-    cuisine: "Indian",
-    difficulty: "Medium",
-    time: "1 hour",
-    xp: 120,
-    rating: 4.6,
-    image: "/api/placeholder/300/200",
-    isLocked: false,
-    description: "Creamy tomato-based curry with tender marinated chicken"
-  },
-  {
-    id: 5,
-    title: "Perfect Sushi Rolls",
-    cuisine: "Japanese",
-    difficulty: "Hard",
-    time: "90 min",
-    xp: 200,
-    rating: 4.5,
-    image: "/api/placeholder/300/200",
-    isLocked: true,
-    description: "Master the art of sushi making with fresh fish and perfect rice"
-  },
-  {
-    id: 6,
-    title: "Mexican Street Tacos",
-    cuisine: "Mexican",
-    difficulty: "Easy",
-    time: "30 min",
-    xp: 90,
-    rating: 4.7,
-    image: "/api/placeholder/300/200",
-    isLocked: false,
-    description: "Authentic street-style tacos with fresh salsa and lime"
-  }
-];
+// MOCK: Replace with your real backend fetch to get user's saved XP
+async function fetchUserXP(): Promise<number> {
+  // Example: fetch('/api/user/xp').then(r => r.json()).then(data => data.xp)
+  // For now, return 0 as starting point
+  return 0;
+}
+
+// MOCK: Replace with your real backend call to update XP
+async function updateUserXP(newXP: number): Promise<void> {
+  // Example: await fetch('/api/user/xp', { method: 'POST', body: JSON.stringify({ xp: newXP }) })
+  console.log("Updating XP on backend to:", newXP);
+}
 
 export default function Recipes() {
+  const [recipes, setRecipes] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCuisines, setSelectedCuisines] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showUnlockedOnly, setShowUnlockedOnly] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState<any | null>(null);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+
+  // USER XP STATE
+  const [userXP, setUserXP] = useState(0);
+
+  // On mount, fetch user XP from backend (e.g. Google login tied DB)
+  useEffect(() => {
+    fetchUserXP().then((xp) => setUserXP(xp));
+  }, []);
+
+  const fetchRecipes = async (cuisineList: string[]) => {
+    try {
+      const cuisineParam = cuisineList.length > 0 ? `&cuisine=${cuisineList.join(",")}` : "";
+      const url = `https://api.spoonacular.com/recipes/complexSearch?apiKey=${API_KEY}&number=18&addRecipeInformation=true${cuisineParam}`;
+      const res = await fetch(url);
+      const data = await res.json();
+
+      const mapped = data.results.map((recipe: any) => ({
+        id: recipe.id,
+        title: recipe.title,
+        cuisine: recipe.cuisines[0] || "Global",
+        difficulty:
+          recipe.readyInMinutes < 25
+            ? "Easy"
+            : recipe.readyInMinutes < 45
+              ? "Medium"
+              : recipe.readyInMinutes < 90
+                ? "Hard"
+                : "Advanced",
+        time: `${recipe.readyInMinutes} min`,
+        xp: Math.floor(recipe.readyInMinutes * 2),
+        rating: recipe.spoonacularScore ? (recipe.spoonacularScore / 20).toFixed(1) : 4.5,
+        image: recipe.image,
+        isLocked: Math.random() < 0.25,
+        description: recipe.summary?.replace(/<[^>]+>/g, "").slice(0, 120) + "..."
+      }));
+
+      setRecipes(mapped);
+    } catch (error) {
+      console.error("Failed to fetch recipes", error);
+    }
+  };
+
+  const fetchRecipeDetails = async (recipe: any) => {
+    try {
+      setIsLoadingDetails(true);
+      const res = await fetch(`https://api.spoonacular.com/recipes/${recipe.id}/information?apiKey=${API_KEY}`);
+      const data = await res.json();
+
+      const detailedRecipe = {
+        ...recipe,
+        ingredients: data.extendedIngredients || [],
+        instructions: data.analyzedInstructions?.[0]?.steps || []
+      };
+
+      setSelectedRecipe(detailedRecipe);
+    } catch (err) {
+      console.error("Failed to fetch full recipe", err);
+    } finally {
+      setIsLoadingDetails(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRecipes(selectedCuisines);
+  }, [selectedCuisines]);
 
   const filteredRecipes = recipes.filter(recipe => {
     const matchesSearch = recipe.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         recipe.cuisine.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCuisine = selectedCuisines.length === 0 || 
-                          selectedCuisines.some(cuisine => 
-                            recipe.cuisine.toLowerCase().includes(cuisine.toLowerCase())
-                          );
+      recipe.cuisine.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesLock = !showUnlockedOnly || !recipe.isLocked;
-    
-    return matchesSearch && matchesCuisine && matchesLock;
+    return matchesSearch && matchesLock;
   });
 
   const handleCuisineToggle = (cuisineId: string) => {
-    setSelectedCuisines(prev => 
-      prev.includes(cuisineId) 
+    setSelectedCuisines(prev =>
+      prev.includes(cuisineId)
         ? prev.filter(id => id !== cuisineId)
         : [...prev, cuisineId]
     );
@@ -136,203 +140,197 @@ export default function Recipes() {
     }
   };
 
+  // XP awarding logic on finishing cooking
+  const handleFinishCooking = async () => {
+    if (!selectedRecipe) return;
+    const newXP = userXP + selectedRecipe.xp;
+    setUserXP(newXP);
+
+    // Save XP to backend (persist for logged-in user)
+    await updateUserXP(newXP);
+
+    setSelectedRecipe(null);
+    alert(`Congrats! You earned +${selectedRecipe.xp} XP! Your total XP is now ${newXP}.`);
+  };
+
   return (
     <div className="flex min-h-screen bg-background">
       <Navigation />
-      
       <main className="flex-1 p-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Recipe Library</h1>
-          <p className="text-muted-foreground">Discover, cook, and master delicious recipes from around the world</p>
-        </div>
-
-        <div className="flex gap-8">
-          {/* Filters Sidebar */}
-          <div className="w-80 space-y-6">
-            {/* Search */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Search className="w-5 h-5" />
-                  Search Recipes
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Input
-                  placeholder="Search for recipes..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full"
-                />
-              </CardContent>
-            </Card>
-
-            {/* Cuisine Filters */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Filter className="w-5 h-5" />
-                  Cuisine Types
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {cuisineTypes.map((cuisine) => (
-                  <div key={cuisine.id} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id={cuisine.id}
-                        checked={selectedCuisines.includes(cuisine.id)}
-                        onCheckedChange={() => handleCuisineToggle(cuisine.id)}
-                      />
-                      <label htmlFor={cuisine.id} className="text-sm font-medium cursor-pointer">
-                        {cuisine.label}
-                      </label>
-                    </div>
-                    <Badge variant="outline" className="text-xs">
-                      {cuisine.count}
-                    </Badge>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            {/* Additional Filters */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Options</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="unlocked-only"
-                    checked={showUnlockedOnly}
-                    onCheckedChange={(checked) => setShowUnlockedOnly(checked === true)}
-                  />
-                  <label htmlFor="unlocked-only" className="text-sm font-medium cursor-pointer">
-                    Unlocked recipes only
-                  </label>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Main Content */}
-          <div className="flex-1">
-            {/* View Controls */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-muted-foreground">
-                  Showing {filteredRecipes.length} recipes
-                </span>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={viewMode === "grid" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("grid")}
-                >
-                  <Grid3X3 className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant={viewMode === "list" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("list")}
-                >
-                  <List className="w-4 h-4" />
-                </Button>
-              </div>
+        {!selectedRecipe ? (
+          <>
+            {/* Top Section */}
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold mb-2">Recipe Library</h1>
+              <p className="text-muted-foreground">Discover, cook, and master delicious recipes from around the world</p>
+              <p className="mt-1 text-sm text-primary font-semibold">Your XP: {userXP}</p>
             </div>
 
-            {/* Recipe Grid */}
-            <div className={viewMode === "grid" ? "grid md:grid-cols-2 xl:grid-cols-3 gap-6" : "space-y-4"}>
-              {filteredRecipes.map((recipe) => (
-                <Card 
-                  key={recipe.id} 
-                  className={`shadow-card hover:shadow-glow transition-all duration-300 group ${
-                    recipe.isLocked ? "opacity-75" : "hover:-translate-y-1"
-                  }`}
-                >
-                  <div className="relative">
-                    <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
-                      <div className="w-full h-full bg-gradient-secondary/20 flex items-center justify-center">
-                        <ChefHat className="w-12 h-12 text-muted-foreground" />
-                      </div>
-                    </div>
-                    
-                    {recipe.isLocked && (
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-t-lg">
-                        <Lock className="w-8 h-8 text-white" />
-                      </div>
-                    )}
-                    
-                    <div className="absolute top-3 right-3">
-                      <Badge variant="gaming">
-                        +{recipe.xp} XP
-                      </Badge>
-                    </div>
-                  </div>
-
+            {/* Main Body */}
+            <div className="flex gap-8">
+              {/* Sidebar */}
+              <div className="w-80 space-y-6">
+                {/* Search */}
+                <Card>
                   <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-lg">{recipe.title}</CardTitle>
-                        <CardDescription className="mt-1">{recipe.description}</CardDescription>
-                      </div>
-                    </div>
+                    <CardTitle className="flex items-center gap-2"><Search className="w-5 h-5" />Search Recipes</CardTitle>
                   </CardHeader>
-
                   <CardContent>
-                    <div className="flex items-center gap-2 mb-4">
-                      <Badge variant="outline">{recipe.cuisine}</Badge>
-                      <Badge className={getDifficultyColor(recipe.difficulty)}>
-                        {recipe.difficulty}
-                      </Badge>
-                    </div>
-
-                    <div className="flex items-center justify-between mb-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        {recipe.time}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        {recipe.rating}
-                      </div>
-                    </div>
-
-                    <Button 
-                      className="w-full" 
-                      variant={recipe.isLocked ? "outline" : "hero"}
-                      disabled={recipe.isLocked}
-                    >
-                      {recipe.isLocked ? (
-                        <>
-                          <Lock className="w-4 h-4 mr-2" />
-                          Locked
-                        </>
-                      ) : (
-                        <>
-                          <ChefHat className="w-4 h-4 mr-2" />
-                          Start Cooking
-                        </>
-                      )}
-                    </Button>
+                    <Input
+                      placeholder="Search for recipes..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
                   </CardContent>
                 </Card>
-              ))}
-            </div>
 
-            {filteredRecipes.length === 0 && (
-              <div className="text-center py-12">
-                <ChefHat className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No recipes found</h3>
-                <p className="text-muted-foreground">Try adjusting your search or filters</p>
+                {/* Filters */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><Filter className="w-5 h-5" />Cuisine Types</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {cuisineTypes.map(cuisine => (
+                      <div key={cuisine.id} className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id={cuisine.id}
+                            checked={selectedCuisines.includes(cuisine.id)}
+                            onCheckedChange={() => handleCuisineToggle(cuisine.id)}
+                          />
+                          <label htmlFor={cuisine.id} className="text-sm font-medium">{cuisine.label}</label>
+                        </div>
+                        <Badge variant="outline" className="text-xs">{cuisine.count}</Badge>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                {/* Options */}
+                <Card>
+                  <CardHeader><CardTitle>Options</CardTitle></CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="unlocked-only"
+                        checked={showUnlockedOnly}
+                        onCheckedChange={(v) => setShowUnlockedOnly(v === true)}
+                      />
+                      <label htmlFor="unlocked-only" className="text-sm font-medium">Unlocked recipes only</label>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-            )}
+
+              {/* Recipe Cards */}
+              <div className="flex-1">
+                <div className="flex justify-between items-center mb-6">
+                  <span className="text-sm text-muted-foreground">Showing {filteredRecipes.length} recipes</span>
+                  <div className="flex items-center gap-2">
+                    <Button variant={viewMode === "grid" ? "default" : "outline"} onClick={() => setViewMode("grid")} size="sm"><Grid3X3 className="w-4 h-4" /></Button>
+                    <Button variant={viewMode === "list" ? "default" : "outline"} onClick={() => setViewMode("list")} size="sm"><List className="w-4 h-4" /></Button>
+                  </div>
+                </div>
+
+                <div className={viewMode === "grid" ? "grid md:grid-cols-2 xl:grid-cols-3 gap-6" : "space-y-4"}>
+                  {filteredRecipes.map(recipe => (
+                    <Card key={recipe.id} className={`shadow-card group transition-all duration-300 ${recipe.isLocked ? "opacity-75" : "hover:-translate-y-1"}`}>
+                      <div className="relative">
+                        <div className="aspect-video bg-muted overflow-hidden rounded-t-lg">
+                          <img src={recipe.image} alt={recipe.title} className="w-full h-full object-cover" />
+                        </div>
+                        {recipe.isLocked && (
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-t-lg">
+                            <Lock className="w-8 h-8 text-white" />
+                          </div>
+                        )}
+                        <div className="absolute top-3 right-3">
+                          <Badge variant="gaming">+{recipe.xp} XP</Badge>
+                        </div>
+                      </div>
+                      <CardHeader>
+                        <CardTitle className="text-lg">{recipe.title}</CardTitle>
+                        <CardDescription>{recipe.description}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center gap-2 mb-4">
+                          <Badge variant="outline">{recipe.cuisine}</Badge>
+                          <Badge className={getDifficultyColor(recipe.difficulty)}>{recipe.difficulty}</Badge>
+                        </div>
+                        <div className="flex justify-between text-sm text-muted-foreground mb-4">
+                          <div className="flex gap-1 items-center"><Clock className="w-4 h-4" />{recipe.time}</div>
+                          <div className="flex gap-1 items-center"><Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />{recipe.rating}</div>
+                        </div>
+                        <Button
+                          className="w-full"
+                          variant={recipe.isLocked ? "outline" : "hero"}
+                          disabled={recipe.isLocked}
+                          onClick={() => fetchRecipeDetails(recipe)}
+                        >
+                          Cook this recipe
+                          <ChefHat className="w-4 h-4 ml-2" />
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          // Detailed recipe view
+          <div className="max-w-4xl mx-auto">
+            <Button
+              variant="outline"
+              className="mb-4"
+              onClick={() => setSelectedRecipe(null)}
+            >
+              <X className="w-4 h-4 mr-2" /> Back to recipes
+            </Button>
+
+            <Card className="shadow-card">
+              <CardHeader>
+                <CardTitle>{selectedRecipe.title}</CardTitle>
+                <CardDescription>{selectedRecipe.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-6">
+                  <img
+                    src={selectedRecipe.image}
+                    alt={selectedRecipe.title}
+                    className="w-full rounded-lg"
+                  />
+                </div>
+
+                <h3 className="text-lg font-semibold mb-2">Ingredients</h3>
+                <ul className="list-disc pl-5 mb-6">
+                  {selectedRecipe.ingredients.map((ing: any) => (
+                    <li key={ing.id}>{ing.original}</li>
+                  ))}
+                </ul>
+
+                <h3 className="text-lg font-semibold mb-2">Instructions</h3>
+                <ol className="list-decimal pl-5 space-y-2 mb-6">
+                  {selectedRecipe.instructions.length > 0
+                    ? selectedRecipe.instructions.map((step: any, idx: number) => (
+                      <li key={idx}>{step.step}</li>
+                    ))
+                    : <li>No instructions available.</li>
+                  }
+                </ol>
+
+                <Button
+                  variant="hero"
+                  className="w-full"
+                  onClick={handleFinishCooking}
+                  disabled={isLoadingDetails}
+                >
+                  {isLoadingDetails ? "Saving XP..." : `Finish Cooking (+${selectedRecipe.xp} XP)`}
+                </Button>
+              </CardContent>
+            </Card>
           </div>
-        </div>
+        )}
       </main>
     </div>
   );
