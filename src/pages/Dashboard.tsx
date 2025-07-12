@@ -263,7 +263,7 @@ export default function Dashboard() {
     { level: 2, title: "Knife Rookie", xpRequired: 400 },
     { level: 3, title: "Spice Trainee", xpRequired: 1200 },
     { level: 4, title: "Flavor Architect", xpRequired: 2800 },
-    { level: 5, title: "Culinary Boss", xpRequired: 2400 },
+    { level: 5, title: "Culinary Boss", xpRequired: 6000 },
   ].map((lvl) => ({
     ...lvl,
     current: lvl.level === userLevel,

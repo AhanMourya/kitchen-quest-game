@@ -72,7 +72,7 @@ export default function Landing() {
             </div>
 
             <div className="flex items-center gap-4">
-              <Link to="/signup">
+              <Link to="/dashboard">
                 <Button variant="hero" size="lg" className="text-lg px-8">
                   Start Your Adventure
                   <Sparkles className="w-5 h-5 ml-2" />
