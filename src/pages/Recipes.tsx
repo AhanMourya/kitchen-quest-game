@@ -10,7 +10,7 @@ import {
   Search, Clock, Star, Lock, ChefHat, Filter, Grid3X3, List, X
 } from "lucide-react";
 
-const API_KEY = "fa488b0073f4429dbabd7b229f02d988"; // CURRENT SPOONACULAR API KEY
+const API_KEY = "d111b78fa08b4cabae59c113e4e86432"; // CURRENT SPOONACULAR API KEY
 
 const cuisineTypes = [
   { id: "african", label: " African", count: 45 },
