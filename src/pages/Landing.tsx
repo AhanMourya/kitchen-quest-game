@@ -163,6 +163,31 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Developer Navigation - Temporary */}
+      <section className="bg-muted/50 py-8 border-t border-dashed border-muted-foreground/30">
+        <div className="container mx-auto px-6">
+          <div className="text-center space-y-4">
+            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+              Developer Navigation (Temporary)
+            </h4>
+            <div className="flex flex-wrap justify-center gap-3">
+              <Link to="/dashboard">
+                <Button variant="outline" size="sm">Dashboard</Button>
+              </Link>
+              <Link to="/recipes">
+                <Button variant="outline" size="sm">Recipes</Button>
+              </Link>
+              <Link to="/login">
+                <Button variant="outline" size="sm">Login</Button>
+              </Link>
+              <Link to="/signup">
+                <Button variant="outline" size="sm">Signup</Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="bg-muted/30 py-12">
         <div className="container mx-auto px-6">
