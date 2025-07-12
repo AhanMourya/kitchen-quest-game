@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 
 // Your Spoonacular API key
-const API_KEY = "d111b78fa08b4cabae59c113e4e86432";
+const API_KEY = "156c29b45ee54086a2fd6139787cdb88";
 
 // LocalStorage keys
 const STORAGE_MISSION_KEY = "dailyMissionRecipe";
@@ -212,10 +212,10 @@ export default function Dashboard() {
         recipe.readyInMinutes < 25
           ? "Easy"
           : recipe.readyInMinutes < 45
-          ? "Medium"
-          : recipe.readyInMinutes < 90
-          ? "Hard"
-          : "Advanced",
+            ? "Medium"
+            : recipe.readyInMinutes < 90
+              ? "Hard"
+              : "Advanced",
       cuisineType: recipe.cuisines?.[0] || "Global",
     };
   }
@@ -426,19 +426,17 @@ export default function Dashboard() {
                     return (
                       <div
                         key={achievement.id}
-                        className={`p-4 rounded-lg border transition-all ${
-                          achievement.unlocked
+                        className={`p-4 rounded-lg border transition-all ${achievement.unlocked
                             ? "bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/30"
                             : "bg-muted/50 border-border/50"
-                        }`}
+                          }`}
                       >
                         <div className="flex items-start gap-3">
                           <div
-                            className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                              achievement.unlocked
+                            className={`w-10 h-10 rounded-lg flex items-center justify-center ${achievement.unlocked
                                 ? "bg-gradient-primary text-primary-foreground"
                                 : "bg-muted text-muted-foreground"
-                            }`}
+                              }`}
                           >
                             <Icon className="w-5 h-5" />
                           </div>
@@ -522,23 +520,21 @@ export default function Dashboard() {
                   {levels.map((level) => (
                     <div
                       key={level.level}
-                      className={`p-4 rounded-lg border transition-all ${
-                        level.current
+                      className={`p-4 rounded-lg border transition-all ${level.current
                           ? "bg-primary/10 border-primary/30"
                           : level.level < (currentLevel?.level || 1)
-                          ? "bg-secondary/10 border-secondary/30"
-                          : "bg-muted/50 border-border/50"
-                      }`}
+                            ? "bg-secondary/10 border-secondary/30"
+                            : "bg-muted/50 border-border/50"
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                            level.current
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${level.current
                               ? "bg-gradient-primary text-primary-foreground"
                               : level.level < (currentLevel?.level || 1)
-                              ? "bg-secondary text-secondary-foreground"
-                              : "bg-muted text-muted-foreground"
-                          }`}
+                                ? "bg-secondary text-secondary-foreground"
+                                : "bg-muted text-muted-foreground"
+                            }`}
                         >
                           {level.level}
                         </div>

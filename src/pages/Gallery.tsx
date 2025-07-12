@@ -44,9 +44,35 @@ export default function Gallery() {
 
   useEffect(() => {
     const stored = localStorage.getItem("uploadedDishes");
-    if (stored) {
-      setUploadedDishes(JSON.parse(stored));
-    }
+    const cooked = localStorage.getItem("cookedRecipes");
+
+    let uploaded = stored ? JSON.parse(stored) : [];
+    let cookedRecipes = cooked ? JSON.parse(cooked) : [];
+
+    // Add cooked recipes if not already present
+    cookedRecipes.forEach((recipe: any) => {
+      const exists = uploaded.some((item: any) => item.id === recipe.id);
+      if (!exists) {
+        uploaded.unshift({
+          id: recipe.id,
+          image: recipe.image,
+          title: recipe.title,
+          cuisine: recipe.cuisine || "Global",
+          recipe: recipe.title,
+          caption: "Made this from the recipe library!",
+          tags: [recipe.cuisine || "global", "auto-uploaded"],
+          rating: parseFloat(recipe.rating) || 5,
+          chef: "You",
+          chefLevel: 1,
+          likes: 0,
+          comments: 0,
+          timeAgo: "Just now",
+        });
+      }
+    });
+
+    setUploadedDishes(uploaded);
+    localStorage.setItem("uploadedDishes", JSON.stringify(uploaded));
   }, []);
 
   const handleLike = (itemId: number) => {
