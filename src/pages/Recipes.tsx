@@ -17,12 +17,32 @@ import {
 } from "lucide-react";
 
 const cuisineTypes = [
-  { id: "italian", label: "🍕 Italian", count: 45 },
-  { id: "indian", label: "🍛 Indian", count: 38 },
-  { id: "mexican", label: "🌮 Mexican", count: 32 },
-  { id: "japanese", label: "🍣 Japanese", count: 29 },
-  { id: "french", label: "🧀 French", count: 25 },
-  { id: "vegan", label: "🌱 Vegan", count: 52 },
+  { id: "african", label: " African", count: 45 },
+  { id: "asian", label: " Asian", count: 38 },
+  { id: "american", label: " American", count: 32 },
+  { id: "british", label: " British", count: 29 },
+  { id: "cajun", label: " Cajun", count: 25 },
+  { id: "caribbean", label: " Caribbean", count: 52 },
+  { id: "eastern_european", label: " Eastern European", count: 52 },
+  { id: "european", label: " European", count: 52 },
+  { id: "french", label: " French", count: 52 },
+  { id: "german", label: " German", count: 52 },
+  { id: "greek", label: " Greek", count: 52 },
+  { id: "indian", label: " Indian", count: 52 },
+  { id: "irish", label: " Irish", count: 52 },
+  { id: "italian", label: " Italian", count: 52 },
+  { id: "japanese", label: " Japanese", count: 52 },
+  { id: "jewish", label: " Jewish", count: 52 },
+  { id: "korean", label: " Korean", count: 52 },
+  { id: "latin_american", label: " Latin American", count: 52 },
+  { id: "mediterranean", label: " Mediterranean", count: 52 },
+  { id: "mexican", label: " Mexican", count: 52 },
+  { id: "middle_eastern", label: " Middle Eastern", count: 52 },
+  { id: "nordic", label: " Nordic", count: 52 },
+  { id: "Southern", label: " Southern", count: 52 },
+  { id: "spanish", label: " Spanish", count: 52 },
+  { id: "thai", label: " Thai", count: 52 },
+  { id: "vietnamese", label: " Vietnamese", count: 52 },
 ];
 
 const recipes = [

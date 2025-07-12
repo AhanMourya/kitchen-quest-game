@@ -8,12 +8,11 @@ const navigationItems = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
   { name: "Recipes", href: "/recipes", icon: BookOpen },
   { name: "Level", href: "/level", icon: TrendingUp },
-  { name: "Community", href: "/community", icon: Users },
   { name: "Gallery", href: "/gallery", icon: Camera },
   { name: "Profile", href: "/profile", icon: User },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
-
+{/* { name: "Community", href: "/community", icon: Users }, */}
 export function Navigation() {
   const location = useLocation();
   const [userXP] = useState(100);
