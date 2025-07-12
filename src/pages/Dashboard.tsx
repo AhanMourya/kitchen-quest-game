@@ -194,14 +194,13 @@ export default function Dashboard() {
                         <div>
                           <div className="font-semibold">{achievement.name}</div>
                           <div className="text-sm text-muted-foreground">{achievement.description}</div>
-
                         </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Sidebar */}
