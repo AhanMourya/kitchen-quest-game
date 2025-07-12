@@ -84,7 +84,16 @@ export default function Dashboard() {
   const [detailedRecipe, setDetailedRecipe] = useState<null | any>(null);
 
   // Achievements data
+  // --- Achievements List ---
+  // Add new achievements here! Each object is a new achievement.
+  // id must be unique. You can set unlocked, xp, progress, and icon.
+  // Example/test achievements added below:
+  // --- Achievements List ---
+  // Add new achievements here! Each object is a new achievement.
+  // id must be unique. You can set unlocked, xp, progress, and icon.
+  // Example/test achievements added below:
   const allAchievements = [
+    // --- UNLOCKED (COMPLETED) ACHIEVEMENTS FOR SCROLL DEMO ---
     {
       id: 1,
       title: "First Flame",
@@ -101,6 +110,57 @@ export default function Dashboard() {
       unlocked: true,
       xp: 0,
     },
+    // --- TEMP COMPLETED ACHIEVEMENTS FOR SCROLL ---
+    {
+      id: 11,
+      title: "Temp Completed 1",
+      description: "Temporary completed achievement for scroll.",
+      icon: Trophy,
+      unlocked: true,
+      xp: 10,
+    },
+    {
+      id: 12,
+      title: "Temp Completed 2",
+      description: "Temporary completed achievement for scroll.",
+      icon: Star,
+      unlocked: true,
+      xp: 20,
+    },
+    {
+      id: 13,
+      title: "Temp Completed 3",
+      description: "Temporary completed achievement for scroll.",
+      icon: ChefHat,
+      unlocked: true,
+      xp: 30,
+    },
+    {
+      id: 14,
+      title: "Temp Completed 4",
+      description: "Temporary completed achievement for scroll.",
+      icon: BookOpen,
+      unlocked: true,
+      xp: 40,
+    },
+    {
+      id: 15,
+      title: "Temp Completed 5",
+      description: "Temporary completed achievement for scroll.",
+      icon: Users,
+      unlocked: true,
+      xp: 50,
+    },
+    {
+      id: 16,
+      title: "Temp Completed 6",
+      description: "Temporary completed achievement for scroll.",
+      icon: Trophy,
+      unlocked: true,
+      xp: 60,
+    },
+    // --- END TEMP COMPLETED ---
+    // --- INCOMPLETE ACHIEVEMENTS ---
     {
       id: 3,
       title: "Breakfast Champion",
@@ -128,7 +188,60 @@ export default function Dashboard() {
       xp: 1000,
       progress: 20,
     },
+    // --- TEST INCOMPLETE ACHIEVEMENTS ---
+    {
+      id: 6,
+      title: "Test Achievement 1",
+      description: "This is a test achievement for demo purposes.",
+      icon: Star,
+      unlocked: false,
+      xp: 50,
+      progress: 10,
+    },
+    {
+      id: 7,
+      title: "Test Achievement 2",
+      description: "Another test achievement. Add your own!",
+      icon: Trophy,
+      unlocked: false,
+      xp: 75,
+      progress: 0,
+    },
+    {
+      id: 8,
+      title: "Test Achievement 3",
+      description: "You can add as many as you want.",
+      icon: ChefHat,
+      unlocked: false,
+      xp: 120,
+      progress: 50,
+    },
+    {
+      id: 9,
+      title: "Test Achievement 4",
+      description: "Scroll to see more achievements!",
+      icon: BookOpen,
+      unlocked: false,
+      xp: 90,
+      progress: 80,
+    },
+    {
+      id: 10,
+      title: "Test Achievement 5",
+      description: "This is the fifth test achievement.",
+      icon: Users,
+      unlocked: false,
+      xp: 60,
+      progress: 5,
+    },
+    // --- END TEST INCOMPLETE ---
   ];
+
+
+  // --- PLACEHOLDER: Logic for completing achievements ---
+  // When an achievement is completed, set its unlocked property to true.
+  // This will automatically move it from the incomplete list to the Completed Quests area below.
+  // Example: allAchievements[2].unlocked = true;
 
   // Achievements UI show state
   const [showAllAchievements, setShowAllAchievements] = useState(false);
@@ -140,9 +253,8 @@ export default function Dashboard() {
   // Quick stats (static, can be dynamic)
   const quickStats = [
     { label: "Recipes Completed", value: 1, icon: BookOpen },
-    { label: "Classes Mastered", value: 1, icon: Trophy },
-    { label: "Badges Earned", value: 1, icon: Star },
-    { label: "Community Votes", value: 1, icon: Users },
+    { label: "Mastery Baged Earned", value: 1, icon: Trophy },
+    { label: "Achievements Completed", value: 1, icon: Star },
   ];
 
   // Level roadmap data
@@ -309,7 +421,7 @@ export default function Dashboard() {
             <XPProgressBar currentXP={userXP} level={userLevel} />
             <p className="mt-2 text-center text-muted-foreground">
               Current XP: {userXP} <br />
-              XP to next level: {xpToNextLevel > 0 ? xpToNextLevel : 0}
+
             </p>
           </CardContent>
         </Card>
@@ -411,7 +523,7 @@ export default function Dashboard() {
               </Card>
             )}
 
-            {/* Achievements */}
+            {/* Achievements (scrollable, auto-generated subsections) */}
             <Card className="shadow-card">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -420,13 +532,13 @@ export default function Dashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
                   {achievementsToShow.map((achievement) => {
                     const Icon = achievement.icon;
                     return (
-                      <div
+                      <section
                         key={achievement.id}
-                        className={`p-4 rounded-lg border transition-all ${
+                        className={`p-4 rounded-lg border transition-all mb-2 ${
                           achievement.unlocked
                             ? "bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/30"
                             : "bg-muted/50 border-border/50"
@@ -465,7 +577,7 @@ export default function Dashboard() {
                               )}
                           </div>
                         </div>
-                      </div>
+                      </section>
                     );
                   })}
                   {incompleteAchievements.length > 5 && !showAllAchievements && (
@@ -483,27 +595,29 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            {/* Quick Stats */}
-            <div className="grid md:grid-cols-4 gap-4">
-              {quickStats.map((stat, index) => {
-                const Icon = stat.icon;
-                return (
-                  <Card
-                    key={index}
-                    className="text-center shadow-card hover:shadow-glow transition-all duration-300"
-                  >
-                    <CardContent className="pt-6">
-                      <div className="w-12 h-12 bg-gradient-secondary rounded-lg flex items-center justify-center mx-auto mb-3">
-                        <Icon className="w-6 h-6 text-secondary-foreground" />
-                      </div>
-                      <div className="text-2xl font-bold text-primary mb-1">
-                        {stat.value}
-                      </div>
-                      <div className="text-sm text-muted-foreground">{stat.label}</div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+            {/* Quick Stats (centered) */}
+            <div className="flex justify-center">
+              <div className="grid md:grid-cols-4 gap-4">
+                {quickStats.map((stat, index) => {
+                  const Icon = stat.icon;
+                  return (
+                    <Card
+                      key={index}
+                      className="text-center shadow-card hover:shadow-glow transition-all duration-300"
+                    >
+                      <CardContent className="pt-6">
+                        <div className="w-12 h-12 bg-gradient-secondary rounded-lg flex items-center justify-center mx-auto mb-3">
+                          <Icon className="w-6 h-6 text-secondary-foreground" />
+                        </div>
+                        <div className="text-2xl font-bold text-primary mb-1">
+                          {stat.value}
+                        </div>
+                        <div className="text-sm text-muted-foreground">{stat.label}</div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
@@ -558,35 +672,44 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            {/* Current Quests */}
+            {/* Completed Quests (shows unlocked achievements with special design) */}
             <Card className="shadow-card">
               <CardHeader>
-                <CardTitle>Active Quests</CardTitle>
-                <CardDescription>Recipes in progress</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-primary" />
+                  Completed Quests
+                </CardTitle>
+                <CardDescription>All your completed achievements</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="p-3 rounded-lg border border-border">
-                    <div className="font-medium text-sm">Pasta Carbonara</div>
-                    <div className="text-xs text-muted-foreground mb-2">
-                      Italian • 30 min
-                    </div>
-                    <Progress value={75} className="h-2" />
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Step 3 of 4
-                    </div>
-                  </div>
-
-                  <div className="p-3 rounded-lg border border-border">
-                    <div className="font-medium text-sm">Miso Soup</div>
-                    <div className="text-xs text-muted-foreground mb-2">
-                      Japanese • 15 min
-                    </div>
-                    <Progress value={25} className="h-2" />
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Step 1 of 3
-                    </div>
-                  </div>
+              <CardContent>
+                <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
+                  {allAchievements.filter(a => a.unlocked).length === 0 && (
+                    <div className="text-muted-foreground text-center py-4">No completed quests yet.</div>
+                  )}
+                  {allAchievements.filter(a => a.unlocked).map((achievement) => {
+                    const Icon = achievement.icon;
+                    return (
+                      <div
+                        key={achievement.id}
+                        className="p-4 rounded-lg border bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/30 transition-all flex items-start gap-3"
+                      >
+                        <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gradient-primary text-primary-foreground">
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1 space-y-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-semibold">{achievement.title}</h4>
+                            <Badge variant="secondary" className="text-xs">
+                              +{achievement.xp} XP
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {achievement.description}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
