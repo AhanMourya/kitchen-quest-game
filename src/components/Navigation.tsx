@@ -16,11 +16,11 @@ const navigationItems = [
 
 export function Navigation() {
   const location = useLocation();
-  const [userXP] = useState(1250);
-  const [userLevel] = useState(8);
+  const [userXP] = useState(100);
+  const [userLevel] = useState(1);
   
-  const currentXPForLevel = (userLevel - 1) * 200;
-  const nextLevelXP = userLevel * 200;
+  const currentXPForLevel = 0;
+  const nextLevelXP = 500;
   const xpProgress = ((userXP - currentXPForLevel) / (nextLevelXP - currentXPForLevel)) * 100;
 
   return (
@@ -90,11 +90,11 @@ export function Navigation() {
       <div className="p-4 border-t border-border">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-gradient-secondary rounded-full flex items-center justify-center">
-            <span className="text-xs font-bold text-secondary-foreground">CH</span>
+            <span className="text-xs font-bold text-secondary-foreground">CR</span>
           </div>
           <div>
-            <p className="text-sm font-medium">Chef Hunter</p>
-            <p className="text-xs text-muted-foreground">Culinary Adventurer</p>
+            <p className="text-sm font-medium">CookieRookie</p>
+            <p className="text-xs text-muted-foreground">Kitchen Newbie</p>
           </div>
         </div>
       </div>
