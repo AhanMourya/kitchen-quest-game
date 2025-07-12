@@ -190,12 +190,11 @@ export default function Recipes() {
     if (!selectedRecipe) return;
     let newXP = userXP + selectedRecipe.xp;
     let newLevel = userLevel;
-    let newXpToNextLevel = xpToNextLevel;
+    let newXpToNextLevel = 400 * (2 ** newLevel - 1) - newXP;
     // Level up logic: if XP exceeds threshold, increase level and recalculate XP
-    if (newXP >= xpToNextLevel) {
+    if (newXpToNextLevel <= 0) {
       newLevel += 1;
-      newXP = newXP - xpToNextLevel;
-      newXpToNextLevel = Math.floor(xpToNextLevel * 1.5); // Increase next level XP requirement
+      newXpToNextLevel = 400 * (2 ** newLevel - 1); // Increase next level XP requirement
     }
     setUserXP(newXP);
     setUserLevel(newLevel);

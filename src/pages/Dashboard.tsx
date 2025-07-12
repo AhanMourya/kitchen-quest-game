@@ -1,5 +1,14 @@
 
 // Dashboard page: Shows user stats, XP/level, daily mission, and quick actions
+
+// --- Quick Stats ---
+// Defined after imports for proper scope
+const quickStats = [
+  { label: "Recipes Completed", value: 1, icon: BookOpen },
+  { label: "Classes Mastered", value: 1, icon: Trophy },
+  { label: "Badges Earned", value: 1, icon: Star },
+  { label: "Community Votes", value: 1, icon: Users },
+];
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -63,15 +72,77 @@ export default function Dashboard() {
     setXpToNextLevel(xpToNextLevel);
   }, []);
 
-  const quickStats = [
-    { label: "Recipes Completed", value: 1, icon: BookOpen },
-    { label: "Classes Mastered", value: 1, icon: Trophy },
-    { label: "Badges Earned", value: 1, icon: Star },
-    { label: "Community Votes", value: 1, icon: Users },
+
+  // Level roadmap data for the Level Roadmap card (used in both main and sidebar)
+  const levels = [
+    { level: 1, title: "Prep Cook	", xpRequired: 0 },
+    { level: 2, title: "Knife Rookie", xpRequired: 400 },
+    { level: 3, title: "Spice Trainee", xpRequired: 1200 },
+    { level: 4, title: "Flavor Architect", xpRequired: 2800 },
+    { level: 5, title: "Culinary Boss", xpRequired: 2400 },
+  ].map(lvl => ({
+    ...lvl,
+    current: lvl.level === userLevel
+  }));
+
+  // Find the current level object
+  const currentLevel = levels.find(lvl => lvl.level === userLevel);
+
+
+  // --- Achievements Data (edit this array to add new achievements) ---
+  // You can add new achievements here. To update their status, use logic below or from other data sources.
+  const allAchievements = [
+    {
+      id: 1,
+      title: "First Flame",
+      description: "Complete your first recipe",
+      icon: Flame,
+      unlocked: true,
+      xp: 100,
+    },
+    {
+      id: 2,
+      title: "Kitchen Novice",
+      description: "Reach Level 1",
+      icon: ChefHat,
+      unlocked: true,
+      xp: 0,
+    },
+    {
+      id: 3,
+      title: "Breakfast Champion",
+      description: "Master 3 breakfast recipes",
+      icon: Star,
+      unlocked: false,
+      xp: 300,
+      progress: 33,
+    },
+    {
+      id: 4,
+      title: "Spice Master",
+      description: "Cook 5 spicy dishes",
+      icon: Target,
+      unlocked: false,
+      xp: 500,
+      progress: 0,
+    },
+    {
+      id: 5,
+      title: "Kitchen Crown",
+      description: "Reach Level 5",
+      icon: Trophy,
+      unlocked: false,
+      xp: 1000,
+      progress: 20,
+    },
+    // Add more achievements here as needed
   ];
 
-  // Empty recent achievements for a new user
-  const recentAchievements: { name: string; description: string; icon: React.FC<any>; }[] = [];
+  // --- Logic for showing incomplete achievements with Load More ---
+  const [showAllAchievements, setShowAllAchievements] = useState(false);
+  // Filter for incomplete (not unlocked) achievements
+  const incompleteAchievements = allAchievements.filter(a => !a.unlocked);
+  const achievementsToShow = showAllAchievements ? incompleteAchievements : incompleteAchievements.slice(0, 5);
 
   // Handler for completing the daily mission — adds XP, handles level up, and updates localStorage
   const handleCompleteMission = () => {
@@ -167,7 +238,81 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            {/* Quick Stats */}
+
+
+
+            {/* Achievements (incomplete, with Load More) */}
+            <Card className="shadow-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Star className="w-5 h-5 text-accent" />
+                  Achievements
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {achievementsToShow.map((achievement) => {
+                    const Icon = achievement.icon;
+                    return (
+                      <div
+                        key={achievement.id}
+                        className={`p-4 rounded-lg border transition-all ${
+                          achievement.unlocked
+                            ? "bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/30"
+                            : "bg-muted/50 border-border/50"
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div
+                            className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                              achievement.unlocked
+                                ? "bg-gradient-primary text-primary-foreground"
+                                : "bg-muted text-muted-foreground"
+                            }`}
+                          >
+                            <Icon className="w-5 h-5" />
+                          </div>
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-semibold">{achievement.title}</h4>
+                              {achievement.unlocked && (
+                                <Badge variant="secondary" className="text-xs">
+                                  +{achievement.xp} XP
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {achievement.description}
+                            </p>
+                            {/* Progress bar for semi-completed achievements */}
+                            {!achievement.unlocked && achievement.progress !== undefined && (
+                              <div className="space-y-1">
+                                <Progress value={achievement.progress} className="h-2" />
+                                <div className="text-xs text-muted-foreground">
+                                  {achievement.progress}% complete
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {/* Load More button if there are more than 5 incomplete achievements */}
+                  {incompleteAchievements.length > 5 && !showAllAchievements && (
+                    <div className="flex justify-center pt-2">
+                      <Button variant="outline" size="sm" onClick={() => setShowAllAchievements(true)}>
+                        Load More
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                {/* Placeholder: Add logic here to update achievement status from other data sources */}
+                {/* Example: fetch progress from recipes, XP, etc. and update allAchievements array */}
+              </CardContent>
+            </Card>
+
+            {/* Quick Stats (moved below Achievements) */}
             <div className="grid md:grid-cols-4 gap-4">
               {quickStats.map((stat, index) => {
                 const Icon = stat.icon;
@@ -184,61 +329,57 @@ export default function Dashboard() {
                 );
               })}
             </div>
-
-            {/* Recent Achievements */}
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="w-5 h-5 text-accent" />
-                  Achievements
-                </CardTitle>
-                <CardDescription>Battles</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recentAchievements.map((achievement, index) => {
-                    const Icon = achievement.icon;
-                    return (
-                      <div key={index} className="flex items-center gap-4 p-3 rounded-lg bg-muted/30">
-                        <div className="w-10 h-10 bg-gradient-accent rounded-lg flex items-center justify-center">
-                          <Icon className="w-5 h-5 text-accent-foreground" />
-                        </div>
-                        <div>
-                          <div className="font-semibold">{achievement.name}</div>
-                          <div className="text-sm text-muted-foreground">{achievement.description}</div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
           </div>
+
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Quick Actions */}
+            {/* Level Roadmap in Sidebar */}
             <Card className="shadow-card">
               <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="w-5 h-5 text-primary" />
+                  Level Roadmap
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <Button variant="outline" className="w-full justify-start">
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  Browse Recipes
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <Camera className="w-4 h-4 mr-2" />
-                  Upload Dish
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <Users className="w-4 h-4 mr-2" />
-                  Join Challenge
-                </Button>
-                <Button variant="secondary" className="w-full justify-start">
-                  <Trophy className="w-4 h-4 mr-2" />
-                  View Leaderboard
-                </Button>
+              <CardContent>
+                <div className="space-y-4">
+                  {levels.map((level, index) => (
+                    <div
+                      key={level.level}
+                      className={`p-4 rounded-lg border transition-all ${
+                        level.current
+                          ? "bg-primary/10 border-primary/30"
+                          : level.level < (currentLevel?.level || 1)
+                          ? "bg-secondary/10 border-secondary/30"
+                          : "bg-muted/50 border-border/50"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                            level.current
+                              ? "bg-gradient-primary text-primary-foreground"
+                              : level.level < (currentLevel?.level || 1)
+                              ? "bg-secondary text-secondary-foreground"
+                              : "bg-muted text-muted-foreground"
+                          }`}
+                        >
+                          {level.level}
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-semibold">{level.title}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {level.level === 1 ? "Starting level" : `${level.xpRequired} XP required`}
+                          </div>
+                        </div>
+                        {level.current && (
+                          <Badge variant="default">Current</Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
 
@@ -266,6 +407,8 @@ export default function Dashboard() {
                 </div>
               </CardContent>
             </Card>
+
+
           </div>
         </div>
       </main>
