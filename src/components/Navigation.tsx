@@ -12,7 +12,6 @@ import { cn } from "@/lib/utils";
 const navigationItems = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
   { name: "Recipes", href: "/recipes", icon: BookOpen },
-  { name: "Level", href: "/level", icon: TrendingUp },
   { name: "Gallery", href: "/gallery", icon: Camera },
   { name: "Profile", href: "/profile", icon: User },
   { name: "Settings", href: "/settings", icon: Settings },
