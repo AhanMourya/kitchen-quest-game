@@ -138,7 +138,7 @@ export default function Gallery() {
               Dish Gallery
             </h1>
             <p className="text-muted-foreground text-lg">
-              Share your culinary creations and discover amazing dishes from the community
+              Keep track of all the delecious dishes you've cooked and attach photos of your own person creations.
             </p>
           </div>
 

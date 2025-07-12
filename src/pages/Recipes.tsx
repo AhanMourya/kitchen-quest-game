@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { incrementRecipeCount, getRecipeCount } from "@/lib/utils";
 import { Navigation } from "@/components/Navigation";
 import {
   Card,
@@ -23,7 +24,7 @@ import {
   X,
 } from "lucide-react";
 
-const API_KEY = "156c29b45ee54086a2fd6139787cdb88"; // CURRENT SPOONACULAR API KEY
+const API_KEY = "e74568527f96476da4884478b68fb76e"; // CURRENT SPOONACULAR API KEY
 
 const cuisineTypes = [
   { id: "african", label: " African", count: 45 },
@@ -250,6 +251,24 @@ export default function Recipes() {
     setUserProfileLocal({ xp: newXP, level: newLevel, xpToNextLevel: nextLevelXP });
 
     addToCookedRecipes(selectedRecipe); // ✅ Save recipe
+    incrementRecipeCount(); // ✅ Increment recipe count
+
+
+    // --- Unlock 'First Flame' achievement in localStorage if recipeCount >= 1 ---
+    if (getRecipeCount() >= 1) {
+      const achievementsRaw = localStorage.getItem('achievements');
+      let achievements = [];
+      try {
+        achievements = achievementsRaw ? JSON.parse(achievementsRaw) : [];
+      } catch {}
+      if (Array.isArray(achievements) && achievements.length > 0) {
+        achievements[0].unlocked = true;
+        achievements[0].progress = 100;
+        localStorage.setItem('achievements', JSON.stringify(achievements));
+        window.dispatchEvent(new Event('achievementsUpdated'));
+      }
+    }
+
     alert(
       `Congrats! You earned +${selectedRecipe.xp} XP! Your total XP is now ${newXP}.`
     );

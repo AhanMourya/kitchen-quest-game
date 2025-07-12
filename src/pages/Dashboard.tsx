@@ -23,9 +23,10 @@ import {
   Target,
   X,
 } from "lucide-react";
+import { incrementRecipeCount, getRecipeCount } from "@/lib/utils";
 
 // Your Spoonacular API key
-const API_KEY = "156c29b45ee54086a2fd6139787cdb88";
+const API_KEY = "e74568527f96476da4884478b68fb76e";
 
 // LocalStorage keys
 const STORAGE_MISSION_KEY = "dailyMissionRecipe";
@@ -37,6 +38,20 @@ function isMissionFresh(timestamp: number | null) {
   if (!timestamp) return false;
   const now = Date.now();
   return now - timestamp < 60 * 60 * 1000; // 1 hour in ms
+}
+
+// --- Daily Mission Completion Tracking ---
+function getTodayKey() {
+  const today = new Date();
+  return `dailyMissionCompleted_${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+}
+
+function isDailyMissionCompletedToday() {
+  return localStorage.getItem(getTodayKey()) === 'true';
+}
+
+function setDailyMissionCompletedToday() {
+  localStorage.setItem(getTodayKey(), 'true');
 }
 
 // Load user XP/level/profile from localStorage
@@ -68,6 +83,189 @@ function setUserProfileLocal(profile: {
 }
 
 export default function Dashboard() {
+  // Daily mission completion state
+  const [missionCompleted, setMissionCompleted] = useState(isDailyMissionCompletedToday());
+   const [achievements, setAchievements] = useState([
+    // --- UNLOCKED (COMPLETED) ACHIEVEMENTS FOR SCROLL DEMO ---
+    {
+      id: 1,
+      title: "First Flame",
+      description: "Complete your first recipe",
+      icon: Flame,
+      unlocked: false,
+      progress: 0,
+      xp: 20,
+    },
+    {
+      id: 2,
+      title: "XP Junkie",
+      description: "Reach 1000 XP",
+      icon: ChefHat,
+      unlocked: false,
+      progress: 0,
+      xp: 50,
+    },
+    {
+      id: 3,
+      title: "Culinary Traveler ",
+      description: "Cook recipes from 5 different cuisines",
+      icon: Trophy,
+      unlocked: false,
+      progress: 0,
+      xp: 50,
+    },
+    {
+      id: 4,
+      title: "Dicing Daily",
+      description: "Cook 5 Daily Recipe Missions",
+      icon: Star,
+      unlocked: false,
+      progress: 0,
+      xp: 100,
+    },
+    {
+      id: 5,
+      title: "Multi-classed Chef",
+      description: "	Master 3 different cuisine classes",
+      icon: ChefHat,
+      unlocked: false,
+      progress: 0,
+      xp: 50,
+    },
+    {
+      id: 6,
+      title: "Photo Finish",
+      description: "	Upload 10 food photos",
+      icon: BookOpen,
+      unlocked: false,
+      progress: 0,
+      xp: 50,
+    },
+    {
+      id: 7,
+      title: "Level Up, Buttercup",
+      description: "Reach Level 5",
+      icon: Users,
+      unlocked: false,
+      progress: 0,
+      xp: 500,
+    },
+    {
+      id: 8,
+      title: "Indian Mastery: Tandoori Titan",
+      description: "Complete Meal Tree + Boss Battle",
+      icon: Trophy,
+      unlocked: false,
+      progress: 0,
+      xp: 300,
+    },
+   
+    {
+      id: 9,
+      title: "Italian Mastery: Pasta Prodigy",
+      description: "Complete Meal Tree + Boss Battle",
+      icon: Star,
+      unlocked: false,
+      xp: 300,
+      progress: 0,
+    },
+    {
+      id: 10,
+      title: "Chinese Mastery: Wok Warrior",
+      description: "Complete Meal Tree + Boss Battle",
+      icon: Star,
+      unlocked: false,
+      xp: 300,
+      progress: 0,
+    },
+    {
+      id: 11,
+      title: "Japanese Mastery: Sushi Sage",
+      description: "Complete Meal Tree + Boss Battle",
+      icon: Star,
+      unlocked: false,
+      xp: 300,
+      progress: 0,
+    },
+    {
+      id: 12,
+      title: "Mexican Mastery: Taco Tactician",
+      description: "Complete Meal Tree + Boss Battle",
+      icon: Star,
+      unlocked: false,
+      xp: 300,
+      progress: 0,
+    },
+    {
+      id: 13,
+      title: "French Mastery: Baguette Boss",
+      description: "Complete Meal Tree + Boss Battle",
+      icon: Star,
+      unlocked: false,
+      xp: 300,
+      progress: 0,
+    },
+    {
+      id: 14,
+      title: "American Mastery: Grill Guardian",
+      description: "Complete Meal Tree + Boss Battle",
+      icon: Star,
+      unlocked: false,
+      xp: 300,
+      progress: 0,
+    },
+    {
+      id: 15,
+      title: "Mediterranean Mastery: Olive Oracle",
+      description: "Complete Meal Tree + Boss Battle",
+      icon: Star,
+      unlocked: false,
+      xp: 300,
+      progress: 0,
+    },
+    {
+      id: 16,
+      title: "Korean Mastery: Kimchi Commander",
+      description: "Complete Meal Tree + Boss Battle",
+      icon: Star,
+      unlocked: false,
+      xp: 300,
+      progress: 0,
+    },
+    {
+      id: 17,
+      title: "Thai Mastery: Spice Summoner",
+      description: "Complete Meal Tree + Boss Battle",
+      icon: Star,
+      unlocked: false,
+      xp: 300,
+      progress: 0,
+    },
+    {
+      id: 18,
+      title: "Greek Mastery: Feta Fighter",
+      description: "Complete Meal Tree + Boss Battle",
+      icon: Star,
+      unlocked: false,
+      xp: 300,
+      progress: 0,
+    },
+  ]);
+  // Listen for storage changes (in case another tab updates)
+  useEffect(() => {
+    const handler = () => setMissionCompleted(isDailyMissionCompletedToday());
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, []);
+  // Recipe count state
+  const [recipeCount, setRecipeCount] = useState(() => getRecipeCount());
+
+  // Listen for recipeCountUpdated event to update state
+  useEffect(() => {
+    const handler = () => setRecipeCount(getRecipeCount());
+    window.addEventListener("recipeCountUpdated", handler);
+    return () => window.removeEventListener("recipeCountUpdated", handler);
+  }, []);
   // User XP and level state, initialized from localStorage
   const [userXP, setUserXP] = useState(() => getUserProfileLocal().xp);
   const [userLevel, setUserLevel] = useState(() => getUserProfileLocal().level);
@@ -92,169 +290,43 @@ export default function Dashboard() {
   // Add new achievements here! Each object is a new achievement.
   // id must be unique. You can set unlocked, xp, progress, and icon.
   // Example/test achievements added below:
-  const allAchievements = [
-    // --- UNLOCKED (COMPLETED) ACHIEVEMENTS FOR SCROLL DEMO ---
-    {
-      id: 1,
-      title: "First Flame",
-      description: "Complete your first recipe",
-      icon: Flame,
-      unlocked: true,
-      xp: 100,
-    },
-    {
-      id: 2,
-      title: "Kitchen Novice",
-      description: "Reach Level 1",
-      icon: ChefHat,
-      unlocked: true,
-      xp: 0,
-    },
-    // --- TEMP COMPLETED ACHIEVEMENTS FOR SCROLL ---
-    {
-      id: 11,
-      title: "Temp Completed 1",
-      description: "Temporary completed achievement for scroll.",
-      icon: Trophy,
-      unlocked: true,
-      xp: 10,
-    },
-    {
-      id: 12,
-      title: "Temp Completed 2",
-      description: "Temporary completed achievement for scroll.",
-      icon: Star,
-      unlocked: true,
-      xp: 20,
-    },
-    {
-      id: 13,
-      title: "Temp Completed 3",
-      description: "Temporary completed achievement for scroll.",
-      icon: ChefHat,
-      unlocked: true,
-      xp: 30,
-    },
-    {
-      id: 14,
-      title: "Temp Completed 4",
-      description: "Temporary completed achievement for scroll.",
-      icon: BookOpen,
-      unlocked: true,
-      xp: 40,
-    },
-    {
-      id: 15,
-      title: "Temp Completed 5",
-      description: "Temporary completed achievement for scroll.",
-      icon: Users,
-      unlocked: true,
-      xp: 50,
-    },
-    {
-      id: 16,
-      title: "Temp Completed 6",
-      description: "Temporary completed achievement for scroll.",
-      icon: Trophy,
-      unlocked: true,
-      xp: 60,
-    },
-    // --- END TEMP COMPLETED ---
-    // --- INCOMPLETE ACHIEVEMENTS ---
-    {
-      id: 3,
-      title: "Breakfast Champion",
-      description: "Master 3 breakfast recipes",
-      icon: Star,
-      unlocked: false,
-      xp: 300,
-      progress: 33,
-    },
-    {
-      id: 4,
-      title: "Spice Master",
-      description: "Cook 5 spicy dishes",
-      icon: Target,
-      unlocked: false,
-      xp: 500,
-      progress: 0,
-    },
-    {
-      id: 5,
-      title: "Kitchen Crown",
-      description: "Reach Level 5",
-      icon: Trophy,
-      unlocked: false,
-      xp: 1000,
-      progress: 20,
-    },
-    // --- TEST INCOMPLETE ACHIEVEMENTS ---
-    {
-      id: 6,
-      title: "Test Achievement 1",
-      description: "This is a test achievement for demo purposes.",
-      icon: Star,
-      unlocked: false,
-      xp: 50,
-      progress: 10,
-    },
-    {
-      id: 7,
-      title: "Test Achievement 2",
-      description: "Another test achievement. Add your own!",
-      icon: Trophy,
-      unlocked: false,
-      xp: 75,
-      progress: 0,
-    },
-    {
-      id: 8,
-      title: "Test Achievement 3",
-      description: "You can add as many as you want.",
-      icon: ChefHat,
-      unlocked: false,
-      xp: 120,
-      progress: 50,
-    },
-    {
-      id: 9,
-      title: "Test Achievement 4",
-      description: "Scroll to see more achievements!",
-      icon: BookOpen,
-      unlocked: false,
-      xp: 90,
-      progress: 80,
-    },
-    {
-      id: 10,
-      title: "Test Achievement 5",
-      description: "This is the fifth test achievement.",
-      icon: Users,
-      unlocked: false,
-      xp: 60,
-      progress: 5,
-    },
-    // --- END TEST INCOMPLETE ---
-  ];
 
+ 
+  // --- LOGIC: Unlock achievements when user finishes a recipe or meets criteria ---
+  // This logic is called in finishCooking().
+  // 1. Unlock 'First Flame' when any recipe is finished.
+  // 2. Unlock 'XP Junkie' when userXP >= 1000.
+  // 3. Unlock 'Dicing Daily' when 5 daily missions are completed (tracked in localStorage).
 
-  // --- PLACEHOLDER: Logic for completing achievements ---
-  // When an achievement is completed, set its unlocked property to true.
-  // This will automatically move it from the incomplete list to the Completed Quests area below.
-  // Example: allAchievements[2].unlocked = true;
+  // Helper: Unlock achievement by title
+  function unlockAchievement(title: string) {
+  setAchievements(prev =>
+    prev.map(a =>
+      a.title === title && !a.unlocked ? { ...a, unlocked: true, progress: 100 } : a
+    )
+  );
+}
+  // Track daily missions completed in localStorage
+  function incrementDailyMissionsCompleted() {
+    const key = 'dailyMissionsCompleted';
+    let count = parseInt(localStorage.getItem(key) || '0', 10);
+    count += 1;
+    localStorage.setItem(key, count.toString());
+    return count;
+  }
 
   // Achievements UI show state
   const [showAllAchievements, setShowAllAchievements] = useState(false);
-  const incompleteAchievements = allAchievements.filter((a) => !a.unlocked);
+  const incompleteAchievements = achievements.filter((a) => !a.unlocked);
   const achievementsToShow = showAllAchievements
     ? incompleteAchievements
     : incompleteAchievements.slice(0, 5);
 
-  // Quick stats (static, can be dynamic)
+  // Quick stats (dynamic)
   const quickStats = [
-    { label: "Recipes Completed", value: 1, icon: BookOpen },
-    { label: "Mastery Baged Earned", value: 1, icon: Trophy },
-    { label: "Achievements Completed", value: 1, icon: Star },
+    { label: "Recipes Completed", value: recipeCount, icon: BookOpen },
+    { label: "Cuisines Mastered", value: 0, icon: Trophy },
+    { label: "Achievements Completed", value: 0, icon: Star },
   ];
 
   // Level roadmap data
@@ -364,19 +436,42 @@ export default function Dashboard() {
 
     let newXP = userXP + dailyMission.xpReward;
     let newLevel = userLevel;
+    let newXpToNextLevel = xpToNextLevel;
     // Example level-up logic: double XP needed per level (can customize)
-    while (newXP >= xpNeededForLevel(newLevel + 1)) {
+    if(newXpToNextLevel <= 0) {
       newLevel += 1;
+      newXpToNextLevel = xpNeededForLevel(newLevel + 1) - newXP;
     }
-    const newXpToNextLevel = xpNeededForLevel(newLevel + 1) - newXP;
-
     setUserXP(newXP);
     setUserLevel(newLevel);
     setXpToNextLevel(newXpToNextLevel);
     setUserProfileLocal({ xp: newXP, level: newLevel, xpToNextLevel: newXpToNextLevel });
 
+    // --- ACHIEVEMENT LOGIC ---
+     if (getRecipeCount() >= 1) {
+      unlockAchievement("First Flame");
+    }
+
+    // 2. Unlock 'XP Junkie' if XP >= 1000
+    if (newXP >= 1000) {
+      unlockAchievement('XP Junkie');
+    }
+
+    // 3. Unlock 'Dicing Daily' if 5 daily missions completed
+    const dailyMissionsCompleted = incrementDailyMissionsCompleted();
+    if (dailyMissionsCompleted >= 5) {
+      unlockAchievement('Dicing Daily');
+    }
+
+    // --- END ACHIEVEMENT LOGIC ---
+
     alert(`Congrats! You earned +${dailyMission.xpReward} XP! Your total XP is now ${newXP}.`);
 
+    incrementRecipeCount(); // ✅ Increment recipe count on daily mission completion
+    
+
+    setDailyMissionCompletedToday();
+    setMissionCompleted(true);
     setQuestStarted(false);
     setDetailedRecipe(null);
   }
@@ -384,7 +479,7 @@ export default function Dashboard() {
   // Helper for XP needed for level (simple exponential curve)
   function xpNeededForLevel(level: number) {
     if (level <= 1) return 0;
-    return 400 * (2 ** (level - 2)); // example: level 2 needs 400, level 3 800, etc.
+    return 100 * (2 ** (level + 1)); // example: level 2 needs 400, level 3 800, etc.
   }
 
   return (
@@ -433,44 +528,63 @@ export default function Dashboard() {
             {isLoading && <p>Loading daily mission...</p>}
 
             {!isLoading && dailyMission && !questStarted && (
-              <Card className="shadow-card hover:shadow-glow transition-all duration-300">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      <Target className="w-5 h-5 text-primary" />
-                      Daily Recipe Mission
-                    </CardTitle>
-                    <Badge variant="gaming" className="bg-gradient-accent">
-                      +{dailyMission.xpReward} XP
-                    </Badge>
-                  </div>
-                  <CardDescription>
-                    Complete today's challenge to earn bonus XP
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <h3 className="text-xl font-semibold mb-2">
-                      {dailyMission.title}
-                    </h3>
-                    <p className="text-muted-foreground">{dailyMission.description}</p>
-                  </div>
+              <div className="relative">
+                <Card className={`shadow-card hover:shadow-glow transition-all duration-300 ${missionCompleted ? 'pointer-events-none opacity-80' : ''}`}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <Target className="w-5 h-5 text-primary" />
+                        Daily Recipe Mission
+                      </CardTitle>
+                      <Badge variant="gaming" className="bg-gradient-accent">
+                        +{dailyMission.xpReward} XP
+                      </Badge>
+                    </div>
+                    <CardDescription>
+                      Complete today's challenge to earn bonus XP
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <h3 className="text-xl font-semibold mb-2">
+                        {dailyMission.title}
+                      </h3>
+                      <p className="text-muted-foreground">{dailyMission.description}</p>
+                    </div>
 
-                  <div className="flex items-center gap-4 text-sm">
-                    <Badge variant="outline">{dailyMission.cuisineType}</Badge>
-                    <Badge variant="outline">{dailyMission.difficulty}</Badge>
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <Clock className="w-4 h-4" />
-                      {dailyMission.timeEstimate}
+                    <div className="flex items-center gap-4 text-sm">
+                      <Badge variant="outline">{dailyMission.cuisineType}</Badge>
+                      <Badge variant="outline">{dailyMission.difficulty}</Badge>
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <Clock className="w-4 h-4" />
+                        {dailyMission.timeEstimate}
+                      </div>
+                    </div>
+
+                    <Button
+                      variant="hero"
+                      className="w-full"
+                      onClick={startQuest}
+                      disabled={missionCompleted}
+                    >
+                      {missionCompleted ? 'Completed' : 'Start Quest'}
+                      <ChefHat className="w-4 h-4 ml-2" />
+                    </Button>
+                  </CardContent>
+                </Card>
+                {missionCompleted && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30 rounded-lg z-10">
+                    <div className="flex flex-col items-center">
+                      <svg className="w-20 h-20 text-green-400 mb-2 animate-bounce" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" />
+                        <path d="M7 13l3 3 7-7" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <span className="text-2xl font-bold text-green-300 drop-shadow-lg">Mission Complete!</span>
+                      <span className="text-sm text-white/80 mt-1">Come back tomorrow for a new quest.</span>
                     </div>
                   </div>
-
-                  <Button variant="hero" className="w-full" onClick={startQuest}>
-                    Start Quest
-                    <ChefHat className="w-4 h-4 ml-2" />
-                  </Button>
-                </CardContent>
-              </Card>
+                )}
+              </div>
             )}
 
             {/* Quest Details when started */}
@@ -679,10 +793,10 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
-                  {allAchievements.filter(a => a.unlocked).length === 0 && (
-                    <div className="text-muted-foreground text-center py-4">No completed quests yet.</div>
+                  {achievements.filter(a => a.unlocked).length === 0 && (
+                    <div className="text-muted-foreground text-center py-4">No completed achievements yet.</div>
                   )}
-                  {allAchievements.filter(a => a.unlocked).map((achievement) => {
+                  {achievements.filter(a => a.unlocked).map((achievement) => {
                     const Icon = achievement.icon;
                     return (
                       <div
