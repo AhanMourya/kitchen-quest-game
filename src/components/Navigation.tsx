@@ -17,6 +17,7 @@ const navigationItems = [
   { name: "Profile", href: "/profile", icon: User },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
+
 // Example: { name: "Community", href: "/community", icon: Users },
 
 // Navigation sidebar component
