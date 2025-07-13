@@ -175,27 +175,40 @@ export default function Recipes() {
         return;
       }
 
-      const mapped = data.results.map((recipe: any) => ({
-        id: recipe.id,
-        title: recipe.title,
-        cuisine: recipe.cuisines?.[0] || "Global",
-        difficulty:
+      const mapped = data.results.map((recipe: any) => {
+        const difficulty =
           recipe.readyInMinutes < 25
             ? "Easy"
             : recipe.readyInMinutes < 45
               ? "Medium"
               : recipe.readyInMinutes < 90
                 ? "Hard"
-                : "Advanced",
-        time: `${recipe.readyInMinutes} min`,
-        xp: Math.floor(recipe.readyInMinutes * 2),
-        rating: recipe.spoonacularScore
-          ? (recipe.spoonacularScore / 20).toFixed(1)
-          : "4.5",
-        image: recipe.image,
-        isLocked: Math.random() < 0.25,
-        description: recipe.summary?.replace(/<[^>]+>/g, "").slice(0, 120) + "...",
-      }));
+                : "Advanced";
+        // Locking system by user level
+        let isLocked = false;
+        if (userLevel === 1) {
+          isLocked = difficulty !== "Easy";
+        } else if (userLevel === 2) {
+          isLocked = !["Easy", "Medium"].includes(difficulty);
+        } else if (userLevel === 3) {
+          isLocked = !["Easy", "Medium", "Hard"].includes(difficulty);
+        } // level 4+ unlocks all
+
+        return {
+          id: recipe.id,
+          title: recipe.title,
+          cuisine: recipe.cuisines?.[0] || "Global",
+          difficulty,
+          time: `${recipe.readyInMinutes} min`,
+          xp: Math.floor(recipe.readyInMinutes * 2),
+          rating: recipe.spoonacularScore
+            ? (recipe.spoonacularScore / 20).toFixed(1)
+            : "4.5",
+          image: recipe.image,
+          isLocked,
+          description: recipe.summary?.replace(/<[^>]+>/g, "").slice(0, 120) + "...",
+        };
+      });
 
       if (reset) {
         setRecipes(mapped);
