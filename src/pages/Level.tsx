@@ -1,5 +1,41 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+// Boss avatars (simple emoji for demo, can be replaced with images)
+const bossAvatars: Record<string, string> = {
+  "The Olympian Chef": "🧑‍🍳",
+  "Nonna Supreme": "👵",
+  "The Dim Sum Dragon": "🐉",
+  "The Spice Maharaja": "🕌",
+  "El Gran Sabio": "🧙‍♂️",
+  "The Shogun Chef": "🥷",
+  "Le Grand Pâtissier": "🧁",
+  "The Yankee Legend": "🦅",
+  "The Aegean Master": "🌊",
+  "The Seoul Sizzler": "🔥",
+  "The Sweet Sage": "🍯",
+};
+// Confetti animation (CSS only, simple)
+function Confetti() {
+  return (
+    <div className="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center animate-fade-out" style={{animationDuration: '1.5s'}}>
+      {[...Array(30)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            fontSize: `${Math.random() * 1.5 + 1}rem`,
+            color: `hsl(${Math.random() * 360},90%,60%)`,
+            transform: `rotate(${Math.random() * 360}deg)`
+          }}
+        >
+          🎉
+        </div>
+      ))}
+    </div>
+  );
+}
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Navigation } from "@/components/Navigation";
@@ -15,9 +51,20 @@ function setCuisineProgress(progress: any) {
 
 const cuisines = [
   {
+    name: "Spanish",
+    color: "bg-orange-200",
+    meals: [
+      "Gazpacho",
+      "Patatas Bravas",
+      "Tortilla Española",
+      "Paella",
+      { name: "Churros", boss: true, bossName: "El Matador Dulce" },
+    ],
+  },
+  {
     name: "Greek",
     color: "bg-cyan-100",
-    meals: [
+    meals: [  
       "Greek Salad",
       "Souvlaki",
       "Spanakopita",
@@ -137,9 +184,12 @@ const cuisines = [
   },
 ];
 
+
 export default function CuisineMastery() {
   const [selectedCuisine, setSelectedCuisine] = useState<null | typeof cuisines[0]>(null);
   const [progress, setProgress] = useState(() => getCuisineProgress());
+  const [showConfetti, setShowConfetti] = useState(false);
+  const confettiTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // Handler for checking a meal as completed
   function handleCheckMeal(cuisineName: string, mealIdx: number) {
@@ -148,6 +198,17 @@ export default function CuisineMastery() {
       if (!updated[cuisineName]) updated[cuisineName] = [false, false, false, false, false];
       updated[cuisineName][mealIdx] = !updated[cuisineName][mealIdx];
       setCuisineProgress(updated);
+
+      // If boss just got checked, show confetti
+      const cuisine = cuisines.find(c => c.name === cuisineName);
+      if (cuisine) {
+        const bossIdx = cuisine.meals.findIndex(m => typeof m === "object" && m.boss);
+        if (bossIdx === mealIdx && updated[cuisineName][mealIdx]) {
+          setShowConfetti(true);
+          if (confettiTimeout.current) clearTimeout(confettiTimeout.current);
+          confettiTimeout.current = setTimeout(() => setShowConfetti(false), 1500);
+        }
+      }
       return updated;
     });
   }
@@ -162,10 +223,12 @@ export default function CuisineMastery() {
             // Find boss meal index
             const bossIdx = cuisine.meals.findIndex(m => typeof m === "object" && m.boss);
             const bossDone = bossIdx !== -1 && progress[cuisine.name]?.[bossIdx];
+            // Level badge if completed
+            const badgeEmoji = bossDone ? "🏅" : "";
             return (
               <div key={cuisine.name} className="relative group">
                 <Card
-                  className={`shadow-card ${cuisine.color} border-2 border-primary/10 cursor-pointer hover:scale-[1.03] transition-transform overflow-hidden ${bossDone ? "opacity-60 grayscale relative" : ""}`}
+                  className={`shadow-card ${cuisine.color} border-2 border-primary/10 cursor-pointer hover:scale-[1.07] hover:shadow-2xl transition-transform duration-300 ease-out overflow-hidden ${bossDone ? "opacity-60 grayscale relative" : ""}`}
                   onClick={() => !bossDone && setSelectedCuisine(cuisine)}
                   style={{ pointerEvents: bossDone ? "none" : undefined }}
                 >
@@ -173,6 +236,7 @@ export default function CuisineMastery() {
                     <CardTitle className="flex items-center gap-2">
                       <span className={`text-xl font-semibold ${bossDone ? "line-through text-muted-foreground" : ""}`}>{cuisine.name}</span>
                       <Badge variant="secondary">5 Meals</Badge>
+                      {badgeEmoji && <span className="ml-2 text-2xl animate-bounce" title="Cuisine Mastered!">{badgeEmoji}</span>}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -180,10 +244,15 @@ export default function CuisineMastery() {
                       {cuisine.meals.map((meal, idx2) => {
                         const mealName = typeof meal === "object" && meal !== null ? meal.name : String(meal);
                         const isBoss = typeof meal === "object" && meal.boss;
+                        const bossName = isBoss && meal.bossName;
                         return (
                           <li key={mealName + "-" + idx2} className="flex items-center gap-2">
                             <span className={`w-2 h-2 rounded-full ${isBoss ? "bg-yellow-400" : "bg-primary"} inline-block`} />
                             <span className={`text-base ${bossDone ? "line-through text-muted-foreground" : ""}`}>{mealName}</span>
+                            {/* Boss avatar */}
+                            {isBoss && bossName && (
+                              <span className="ml-2 text-xl" title={bossName}>{bossAvatars[bossName] || "👑"}</span>
+                            )}
                             {isBoss && bossDone && (
                               <span className="ml-2 px-2 py-1 bg-green-300 text-green-900 rounded text-xs font-bold border border-green-500 shadow animate-bounce">Defeated!</span>
                             )}
@@ -213,7 +282,7 @@ export default function CuisineMastery() {
         {/* Modal/Popup for cuisine tree */}
         {selectedCuisine && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-card rounded-xl shadow-2xl p-8 max-w-lg w-full relative animate-in fade-in zoom-in-95">
+            <div className="bg-card rounded-xl shadow-2xl p-8 max-w-lg w-full relative animate-in fade-in zoom-in-90 animate-duration-500 animate-ease-out">
               <button
                 className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
                 onClick={() => setSelectedCuisine(null)}
@@ -226,9 +295,39 @@ export default function CuisineMastery() {
                 <Badge variant="secondary">5 Meals</Badge>
               </h2>
               <p className="mb-6 text-muted-foreground">Progress through these meals from easiest to hardest. Check off as you master each one!</p>
-              <div className="flex flex-col items-center">
+              <div className="flex flex-col items-center w-full">
+                {/* Boss health bar (progress bar) */}
+                {(() => {
+                  const bossIdx = selectedCuisine.meals.findIndex(m => typeof m === "object" && m.boss);
+                  if (bossIdx === -1) return null;
+                  const completed = progress[selectedCuisine.name]?.slice(0, bossIdx).filter(Boolean).length || 0;
+                  const total = bossIdx;
+                  const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+                  const bossMeal = selectedCuisine.meals[bossIdx];
+                  const bossName = typeof bossMeal === "object" && bossMeal.bossName;
+                  return (
+                    <div className="w-full mb-6 flex flex-col items-center">
+                      <div className="flex items-center gap-3 mb-1">
+                        {/* Boss avatar */}
+                        {bossName && <span className="text-3xl" title={bossName}>{bossAvatars[bossName] || "👑"}</span>}
+                        <span className="font-bold text-lg text-yellow-900">{bossName ? bossName : "Boss"}</span>
+                        <span className="ml-2 px-2 py-1 bg-yellow-300 text-yellow-900 rounded text-xs font-bold border border-yellow-500 shadow">BOSS</span>
+                      </div>
+                      <div className="w-full bg-yellow-100 rounded-full h-5 border-2 border-yellow-400 shadow-inner relative flex items-center">
+                        <div
+                          className="bg-gradient-to-r from-yellow-400 to-yellow-600 h-5 rounded-full transition-all duration-500"
+                          style={{ width: `${percent}%` }}
+                        ></div>
+                        <span className="absolute left-1/2 -translate-x-1/2 text-xs font-bold text-yellow-900 drop-shadow">
+                          {percent}%
+                        </span>
+                      </div>
+                      <span className="text-xs text-yellow-700 mt-1">Defeat the boss by mastering all previous meals!</span>
+                    </div>
+                  );
+                })()}
                 {/* Tree visualization: vertical with connecting lines */}
-                <div className="flex flex-col items-center">
+                <div className="flex flex-col items-center w-full">
                   {selectedCuisine.meals.map((meal, i) => {
                     // Support both string and object for meal
                     const isObj = typeof meal === "object" && meal !== null;
@@ -250,6 +349,10 @@ export default function CuisineMastery() {
                           <span className={`text-lg font-medium ${progress[selectedCuisine.name]?.[i] ? "line-through text-primary" : ""} ${isBoss ? "text-yellow-900 font-extrabold tracking-wide drop-shadow" : ""}`}>
                             {mealName}
                           </span>
+                          {/* Boss avatar */}
+                          {isBoss && bossName && (
+                            <span className="ml-2 text-2xl" title={bossName}>{bossAvatars[bossName] || "👑"}</span>
+                          )}
                           {isBoss && (
                             <span className="ml-2 px-2 py-1 bg-yellow-300 text-yellow-900 rounded text-xs font-bold animate-pulse border border-yellow-500 shadow">BOSS</span>
                           )}
@@ -270,6 +373,8 @@ export default function CuisineMastery() {
                 </div>
               </div>
             </div>
+            {/* Confetti animation on boss defeat */}
+            {showConfetti && <Confetti />}
           </div>
         )}
       </main>
