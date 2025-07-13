@@ -26,7 +26,7 @@ import {
 import { incrementRecipeCount, getRecipeCount } from "@/lib/utils";
 
 // KEY
-const API_KEY = "697f709e3dca49799197579e6336c862";
+const API_KEY = "c275e49d3b0c473da40a62023f2651d0";
 
 // LocalStorage keys
 const STORAGE_MISSION_KEY = "dailyMissionRecipe";
