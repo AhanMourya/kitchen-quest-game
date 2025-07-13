@@ -15,6 +15,7 @@ const navigationItems = [
   { name: "Gallery", href: "/gallery", icon: Camera },
   { name: "Profile", href: "/profile", icon: User },
   { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Cuisine Mastery", href: "/level", icon: TrendingUp },
 ];
 
 // Example: { name: "Community", href: "/community", icon: Users },

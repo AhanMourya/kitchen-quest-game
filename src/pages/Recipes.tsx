@@ -27,32 +27,33 @@ import {
 const API_KEY = "348fc84229fd49848f40916bd485b276"; // CURRENT SPOONACULAR API KEY
 
 const cuisineTypes = [
-  { id: "african", label: " African", count: 45 },
-  { id: "asian", label: " Asian", count: 38 },
-  { id: "american", label: " American", count: 32 },
-  { id: "british", label: " British", count: 29 },
-  { id: "cajun", label: " Cajun", count: 25 },
-  { id: "caribbean", label: " Caribbean", count: 52 },
-  { id: "eastern_european", label: " Eastern European", count: 52 },
-  { id: "european", label: " European", count: 52 },
-  { id: "french", label: " French", count: 52 },
-  { id: "german", label: " German", count: 52 },
-  { id: "greek", label: " Greek", count: 52 },
-  { id: "indian", label: " Indian", count: 52 },
-  { id: "irish", label: " Irish", count: 52 },
-  { id: "italian", label: " Italian", count: 52 },
-  { id: "japanese", label: " Japanese", count: 52 },
-  { id: "jewish", label: " Jewish", count: 52 },
-  { id: "korean", label: " Korean", count: 52 },
-  { id: "latin_american", label: " Latin American", count: 52 },
-  { id: "mediterranean", label: " Mediterranean", count: 52 },
-  { id: "mexican", label: " Mexican", count: 52 },
-  { id: "middle_eastern", label: " Middle Eastern", count: 52 },
-  { id: "nordic", label: " Nordic", count: 52 },
-  { id: "southern", label: " Southern", count: 52 },
-  { id: "spanish", label: " Spanish", count: 52 },
-  { id: "thai", label: " Thai", count: 52 },
-  { id: "vietnamese", label: " Vietnamese", count: 52 },
+  { id: "african", label: " African" },
+  { id: "asian", label: " Asian" },
+  { id: "american", label: " American" },
+  { id: "british", label: " British" },
+  { id: "cajun", label: " Cajun" },
+  { id: "chinese", label: " Chinese" },
+  { id: "caribbean", label: " Caribbean" },
+  { id: "eastern_european", label: " Eastern European" },
+  { id: "european", label: " European" },
+  { id: "french", label: " French" },
+  { id: "german", label: " German" },
+  { id: "greek", label: " Greek" },
+  { id: "indian", label: " Indian" },
+  { id: "irish", label: " Irish" },
+  { id: "italian", label: " Italian" },
+  { id: "japanese", label: " Japanese" },
+  { id: "jewish", label: " Jewish" },
+  { id: "korean", label: " Korean" },
+  { id: "latin_american", label: " Latin American" },
+  { id: "mediterranean", label: " Mediterranean" },
+  { id: "mexican", label: " Mexican" },
+  { id: "middle_eastern", label: " Middle Eastern" },
+  { id: "nordic", label: " Nordic" },
+  { id: "southern", label: " Southern" },
+  { id: "spanish", label: " Spanish" },
+  { id: "thai", label: " Thai" },
+  { id: "vietnamese", label: " Vietnamese" },
 ];
 
 // LocalStorage: XP/level data
@@ -386,7 +387,7 @@ export default function Recipes() {
                           </label>
                         </div>
                         <Badge variant="outline" className="text-xs">
-                          {c.count}
+
                         </Badge>
                       </div>
                     ))}
