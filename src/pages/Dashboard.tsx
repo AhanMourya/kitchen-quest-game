@@ -26,7 +26,7 @@ import {
 import { incrementRecipeCount, getRecipeCount } from "@/lib/utils";
 
 // Your Spoonacular API key
-const API_KEY = "348fc84229fd49848f40916bd485b276";
+const API_KEY = "de958240a28b451d9e1cce53745bcbff";
 
 // LocalStorage keys
 const STORAGE_MISSION_KEY = "dailyMissionRecipe";
