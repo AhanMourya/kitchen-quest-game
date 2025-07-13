@@ -25,7 +25,7 @@ import {
   X,
 } from "lucide-react";
 
-const API_KEY = "d805116f65234055857a2587f63c3ebc"; // CURRENT API KEY
+const API_KEY = "697f709e3dca49799197579e6336c862"; // CURRENT API KEY
 
 const cuisineTypes = [
   { id: "african", label: " African" },
