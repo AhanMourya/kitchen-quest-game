@@ -88,7 +88,7 @@ export default function Landing() {
 
             <div className="flex items-center gap-8 pt-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">100K+</div>
+                <div className="text-2xl font-bold text-primary">5K+</div>
                 <div className="text-sm text-muted-foreground">Recipes</div>
               </div>
               <div className="text-center">

@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 // Boss avatars (simple emoji for demo, can be replaced with images)
 const bossAvatars: Record<string, string> = {
+  "El Matador Dulce": "👨",
   "The Olympian Chef": "🧑‍🍳",
   "Nonna Supreme": "👵",
   "The Dim Sum Dragon": "🐉",

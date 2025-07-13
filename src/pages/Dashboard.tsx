@@ -26,7 +26,7 @@ import {
 import { incrementRecipeCount, getRecipeCount } from "@/lib/utils";
 
 // Your Spoonacular API key
-const API_KEY = "de958240a28b451d9e1cce53745bcbff";
+const API_KEY = "d805116f65234055857a2587f63c3ebc";
 
 // LocalStorage keys
 const STORAGE_MISSION_KEY = "dailyMissionRecipe";
@@ -80,6 +80,8 @@ function setUserProfileLocal(profile: {
   xpToNextLevel: number;
 }) {
   localStorage.setItem(STORAGE_PROFILE_KEY, JSON.stringify(profile));
+  // Dispatch custom event so Navigation sidebar updates immediately
+  window.dispatchEvent(new Event('userProfileUpdated'));
 }
 
 export default function Dashboard() {
@@ -236,6 +238,15 @@ export default function Dashboard() {
     {
       id: 18,
       title: "Greek Mastery: Feta Fighter",
+      description: "Complete Meal Tree + Boss Battle",
+      icon: Star,
+      unlocked: false,
+      xp: 300,
+      progress: 0,
+    },
+    {
+      id: 19,
+      title: "Spanish Mastery: Paella Paladin",
       description: "Complete Meal Tree + Boss Battle",
       icon: Star,
       unlocked: false,
@@ -618,6 +629,7 @@ export default function Dashboard() {
     "The Seoul Sizzler": "Korean Mastery: Kimchi Commander",
     "The Sweet Sage": "Thai Mastery: Spice Summoner",
     "The Olympian Chef": "Greek Mastery: Feta Fighter",
+    "El Matador Dulce": "Spanish Mastery: Paella Paladin",
   };
 
   // Award cuisine mastery achievements when bosses are defeated
@@ -952,7 +964,7 @@ export default function Dashboard() {
                     return (
                       <div
                         key={achievement.id}
-                        className="p-4 rounded-lg border-2 bg-gradient-to-r from-pink-100 via-yellow-50 to-orange-100 border-pink-500 transition-all flex items-start gap-3"
+                        className="p-4 rounded-lg border-2 bg-gradient-to-r from-pink-100 via-yellow-50 to-orange-100 border-pink-500 transition-all flex items-start gap-3 relative"
                       >
                         <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gradient-to-br from-pink-400 via-yellow-400 to-orange-400 text-white">
                           <Icon className="w-5 h-5" />
@@ -960,9 +972,6 @@ export default function Dashboard() {
                         <div className="flex-1 space-y-1">
                           <div className="flex items-center gap-2">
                             <h4 className="font-semibold">{achievement.title}</h4>
-                            <Badge variant="secondary" className="text-xs">
-                              +{achievement.xp} XP
-                            </Badge>
                           </div>
                           <p className="text-sm text-muted-foreground">
                             {achievement.description}

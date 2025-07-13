@@ -25,7 +25,7 @@ import {
   X,
 } from "lucide-react";
 
-const API_KEY = "de958240a28b451d9e1cce53745bcbff"; // CURRENT SPOONACULAR API KEY
+const API_KEY = "d805116f65234055857a2587f63c3ebc"; // CURRENT SPOONACULAR API KEY
 
 const cuisineTypes = [
   { id: "african", label: " African" },

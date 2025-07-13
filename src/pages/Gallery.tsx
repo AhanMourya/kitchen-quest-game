@@ -299,18 +299,26 @@ export default function Gallery() {
                   <div>
                     <h3 className="font-semibold">{item.title}</h3>
                     <p className="text-sm text-muted-foreground">
-                      by {item.chef} (Level {item.chefLevel}) • {item.timeAgo}
+                      by {item.chef} • {item.timeAgo}
                     </p>
                   </div>
 
+                  {/* User can rate their own image by clicking stars */}
                   <div className="flex items-center gap-1">
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`w-4 h-4 ${i < item.rating ? "text-yellow-500 fill-current" : "text-muted-foreground"}`}
+                        className={`w-4 h-4 cursor-pointer transition-colors duration-150 ${i < item.rating ? "text-yellow-500 fill-current" : "text-muted-foreground hover:text-yellow-400"}`}
+                        onClick={() => {
+                          // Update rating for this image
+                          const updated = uploadedDishes.map(dish =>
+                            dish.id === item.id ? { ...dish, rating: i + 1 } : dish
+                          );
+                          setUploadedDishes(updated);
+                          localStorage.setItem("uploadedDishes", JSON.stringify(updated));
+                        }}
                       />
                     ))}
-                    <span className="text-sm text-muted-foreground ml-1">({item.rating})</span>
                   </div>
 
                   <p className="text-sm text-muted-foreground">{item.caption}</p>
@@ -334,10 +342,35 @@ export default function Gallery() {
                         <Heart className={`w-4 h-4 ${likedItems.includes(item.id) ? "fill-current" : ""}`} />
                         {item.likes + (likedItems.includes(item.id) ? 1 : 0)}
                       </Button>
-                      <Button variant="ghost" size="sm" className="gap-1">
-                        <MessageCircle className="w-4 h-4" />
-                        {item.comments}
+                      {/* Add Photo button to replace the image for this dish */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1"
+                        onClick={() => document.getElementById(`add-photo-input-${item.id}`)?.click()}
+                      >
+                        <Upload className="w-4 h-4" />
+                        Add Photo
                       </Button>
+                      <input
+                        id={`add-photo-input-${item.id}`}
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        onChange={e => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            const updated = uploadedDishes.map(dish =>
+                              dish.id === item.id ? { ...dish, image: reader.result as string } : dish
+                            );
+                            setUploadedDishes(updated);
+                            localStorage.setItem("uploadedDishes", JSON.stringify(updated));
+                          };
+                          reader.readAsDataURL(file);
+                        }}
+                      />
                     </div>
                     <Button variant="ghost" size="sm">
                       <Share2 className="w-4 h-4" />
