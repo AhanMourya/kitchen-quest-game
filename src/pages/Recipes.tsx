@@ -24,7 +24,7 @@ import {
   X,
 } from "lucide-react";
 
-const API_KEY = "e74568527f96476da4884478b68fb76e"; // CURRENT SPOONACULAR API KEY
+const API_KEY = "348fc84229fd49848f40916bd485b276"; // CURRENT SPOONACULAR API KEY
 
 const cuisineTypes = [
   { id: "african", label: " African", count: 45 },
@@ -251,8 +251,29 @@ export default function Recipes() {
     setUserProfileLocal({ xp: newXP, level: newLevel, xpToNextLevel: nextLevelXP });
 
     addToCookedRecipes(selectedRecipe); // ✅ Save recipe
-    incrementRecipeCount(); // ✅ Increment recipe count
+    // Increment recipe count in localStorage for cross-page use
+    incrementRecipeCount(); // legacy, if used elsewhere
+    // New: store total completed count
+    const countKey = 'recipesCompletedCount';
+    let completedCount = parseInt(localStorage.getItem(countKey) || '0', 10);
+    completedCount += 1;
+    localStorage.setItem(countKey, completedCount.toString());
+    window.dispatchEvent(new Event('recipesCompletedCountUpdated'));
 
+    // --- Unique cuisines logic ---
+    const uniqueCuisinesKey = 'uniqueCuisinesCooked';
+    let uniqueCuisines: string[] = [];
+    try {
+      uniqueCuisines = JSON.parse(localStorage.getItem(uniqueCuisinesKey) || '[]');
+    } catch { uniqueCuisines = []; }
+    const recipeCuisine = selectedRecipe.cuisine;
+    if (recipeCuisine && !uniqueCuisines.includes(recipeCuisine)) {
+      uniqueCuisines.push(recipeCuisine);
+      localStorage.setItem(uniqueCuisinesKey, JSON.stringify(uniqueCuisines));
+      // Store the count for Dashboard.tsx
+      localStorage.setItem('uniqueCuisinesCookedCount', uniqueCuisines.length.toString());
+      window.dispatchEvent(new Event('uniqueCuisinesCookedUpdated'));
+    }
 
     // --- Unlock 'First Flame' achievement in localStorage if recipeCount >= 1 ---
     if (getRecipeCount() >= 1) {
@@ -260,7 +281,7 @@ export default function Recipes() {
       let achievements = [];
       try {
         achievements = achievementsRaw ? JSON.parse(achievementsRaw) : [];
-      } catch {}
+      } catch { }
       if (Array.isArray(achievements) && achievements.length > 0) {
         achievements[0].unlocked = true;
         achievements[0].progress = 100;
@@ -435,8 +456,8 @@ export default function Recipes() {
                     <Card
                       key={recipe.id}
                       className={`shadow-card group transition-all duration-300 ${recipe.isLocked
-                          ? "opacity-75"
-                          : "hover:-translate-y-1"
+                        ? "opacity-75"
+                        : "hover:-translate-y-1"
                         }`}
                     >
                       <div className="relative">
