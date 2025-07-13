@@ -228,8 +228,12 @@ export default function CuisineMastery() {
             return (
               <div key={cuisine.name} className="relative group">
                 <Card
-                  className={`shadow-card ${cuisine.color} border-2 border-primary/10 cursor-pointer hover:scale-[1.07] hover:shadow-2xl transition-transform duration-300 ease-out overflow-hidden ${bossDone ? "opacity-60 grayscale relative" : ""}`}
-                  onClick={() => !bossDone && setSelectedCuisine(cuisine)}
+                  className={`shadow-card bg-gradient-to-br from-pink-100 via-yellow-50 to-orange-100 border-2 border-pink-200 cursor-pointer hover:scale-[1.07] hover:shadow-2xl transition-transform duration-300 ease-out overflow-hidden ${bossDone ? "opacity-60 grayscale relative" : ""}`}
+                  onClick={() => {
+                    if (!bossDone) {
+                      setSelectedCuisine(cuisine);
+                    }
+                  }}
                   style={{ pointerEvents: bossDone ? "none" : undefined }}
                 >
                   <CardHeader>
@@ -335,17 +339,36 @@ export default function CuisineMastery() {
                     const isBoss = isObj && meal.boss;
                     const bossName = isObj && meal.bossName;
                     // Boss meal: only enable checkbox if all previous are checked
-                    const bossDisabled = isBoss && progress[selectedCuisine.name]?.slice(0, i)?.some((v: boolean) => !v);
+                    // Only apply bossDisabled to the boss meal
+                    const bossIdx = selectedCuisine.meals.findIndex(m => typeof m === "object" && m.boss);
+                    // Always lock boss if any of the first four are unchecked, even on modal open
+                    const bossDisabled = isBoss && bossIdx === i && (
+                      !progress[selectedCuisine.name] || progress[selectedCuisine.name].slice(0, i).some((v: boolean) => !v)
+                    );
                     return (
-                      <div key={mealName + "-" + i} className="flex flex-col items-center w-full">
-                        <div className={`flex items-center gap-3 w-full ${isBoss ? "bg-gradient-to-r from-yellow-200 via-yellow-100 to-transparent rounded-lg border-2 border-yellow-400 shadow-lg py-2 px-3" : ""}`}>
-                          <input
-                            type="checkbox"
-                            checked={progress[selectedCuisine.name]?.[i] || false}
-                            onChange={() => handleCheckMeal(selectedCuisine.name, i)}
-                            className={`accent-primary w-5 h-5 rounded border border-primary/40 shadow ${isBoss ? "ring-2 ring-yellow-400" : ""}`}
-                            disabled={!!bossDisabled}
-                          />
+                      <div key={mealName + "-" + i} className="flex flex-col items-center w-full relative">
+                        <div className={`flex items-center gap-3 w-full ${isBoss ? "bg-gradient-to-r from-yellow-200 via-yellow-100 to-transparent rounded-lg border-2 border-yellow-400 shadow-lg py-2 px-3 relative" : ""}`}>
+                          <div className="relative">
+                            <input
+                              type="checkbox"
+                              checked={progress[selectedCuisine.name]?.[i] || false}
+                              onChange={() => handleCheckMeal(selectedCuisine.name, i)}
+                              tabIndex={isBoss && bossDisabled ? -1 : 0}
+                              aria-disabled={isBoss && bossDisabled ? true : undefined}
+                              className={`accent-primary w-5 h-5 rounded border border-primary/40 shadow ${isBoss ? "ring-2 ring-yellow-400" : ""}`}
+                            />
+                            {/* Overlay for locked boss: semi-transparent, blocks pointer events, matches Dashboard style */}
+                            {isBoss && bossIdx === i && bossDisabled && (
+                              <div
+                                className="absolute inset-0 z-30 pointer-events-auto flex items-center justify-center"
+                                style={{ background: "rgba(120,120,120,0.35)", borderRadius: '0.25rem' }}
+                                tabIndex={-1}
+                                aria-hidden="true"
+                              >
+                                <span className="sr-only">Locked</span>
+                              </div>
+                            )}
+                          </div>
                           <span className={`text-lg font-medium ${progress[selectedCuisine.name]?.[i] ? "line-through text-primary" : ""} ${isBoss ? "text-yellow-900 font-extrabold tracking-wide drop-shadow" : ""}`}>
                             {mealName}
                           </span>

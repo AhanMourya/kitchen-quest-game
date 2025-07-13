@@ -584,7 +584,7 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-yellow-50">
       <Navigation />
 
       <main className="flex-1 p-8 max-w-7xl mx-auto">
@@ -592,13 +592,11 @@ export default function Dashboard() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold">Welcome back, Chef Hunter!</h1>
-              <p className="text-muted-foreground mt-1">
-                Ready to cook up some XP today?
-              </p>
+              <h1 className="text-3xl font-extrabold text-yellow-900 drop-shadow-lg animate-in fade-in zoom-in-90">Welcome back, Chef Hunter!</h1>
+              <p className="text-lg text-yellow-800 font-semibold mt-1 animate-in fade-in slide-in-from-left-8">Ready to cook up some XP today?</p>
             </div>
             <div className="flex items-center gap-4">
-              <Badge variant="secondary" className="text-lg px-4 py-2">
+              <Badge variant="secondary" className="text-lg px-4 py-2 bg-yellow-100 text-yellow-900 border-yellow-300 shadow-md">
                 Culinary Adventurer
               </Badge>
             </div>
@@ -606,7 +604,7 @@ export default function Dashboard() {
         </div>
 
         {/* XP Progress Section */}
-        <Card className="mb-8 bg-gradient-primary/5 border-primary/20">
+        <Card className="mb-8 bg-gradient-to-r from-pink-100 via-yellow-50 to-orange-100 border-2 border-pink-200 shadow-xl animate-in fade-in zoom-in-90">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="w-5 h-5 text-primary" />
@@ -630,14 +628,14 @@ export default function Dashboard() {
 
             {!isLoading && dailyMission && !questStarted && (
               <div className="relative">
-                <Card className={`shadow-card hover:shadow-glow transition-all duration-300 ${missionCompleted ? 'pointer-events-none opacity-80' : ''}`}>
+                <Card className={`shadow-card hover:shadow-glow transition-all duration-300 bg-gradient-to-br from-pink-100 via-yellow-50 to-orange-100 border-2 border-pink-200 ${missionCompleted ? 'pointer-events-none opacity-80' : ''}`}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="flex items-center gap-2">
                         <Target className="w-5 h-5 text-primary" />
                         Daily Recipe Mission
                       </CardTitle>
-                      <Badge variant="gaming" className="bg-gradient-accent">
+                      <Badge variant="gaming" className="bg-gradient-to-r from-pink-400 via-yellow-300 to-orange-400 text-white shadow-lg border-none">
                         +{dailyMission.xpReward} XP
                       </Badge>
                     </div>
@@ -690,7 +688,7 @@ export default function Dashboard() {
 
             {/* Quest Details when started */}
             {questStarted && detailedRecipe && (
-              <Card className="shadow-card hover:shadow-glow transition-all duration-300">
+              <Card className="shadow-card hover:shadow-glow transition-all duration-300 bg-gradient-to-br from-orange-100 via-pink-100 to-yellow-50 border-2 border-orange-200">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle>{detailedRecipe.title}</CardTitle>
@@ -739,7 +737,7 @@ export default function Dashboard() {
             )}
 
             {/* Achievements (scrollable, auto-generated subsections) */}
-            <Card className="shadow-card">
+            <Card className="shadow-card bg-gradient-to-r from-pink-100 via-yellow-50 to-orange-100 border-2 border-pink-200">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Star className="w-5 h-5 text-accent" />
@@ -753,41 +751,36 @@ export default function Dashboard() {
                     return (
                       <section
                         key={achievement.id}
-                        className={`p-4 rounded-lg border transition-all mb-2 ${achievement.unlocked
-                          ? "bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/30"
-                          : "bg-muted/50 border-border/50"
+                        className={`relative p-4 rounded-xl border-4 transition-all mb-4 shadow-md ${achievement.unlocked
+                          ? "bg-gradient-to-r from-yellow-50 via-pink-50 to-orange-50 border-pink-200 animate-in fade-in zoom-in-90"
+                          : "bg-muted/60 border-border/60"
                           }`}
                       >
-                        <div className="flex items-start gap-3">
+                        {/* Decorative sparkle for unlocked */}
+                        {achievement.unlocked && (
+                          <span className="absolute -top-2 -right-2 text-yellow-400 text-2xl animate-bounce select-none">✨</span>
+                        )}
+                        <div className="flex items-start gap-4">
                           <div
-                            className={`w-10 h-10 rounded-lg flex items-center justify-center ${achievement.unlocked
-                              ? "bg-gradient-primary text-primary-foreground"
-                              : "bg-muted text-muted-foreground"
+                            className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl border-2 ${achievement.unlocked
+                              ? "bg-gradient-to-br from-pink-400 via-yellow-400 to-orange-400 text-white border-pink-400 shadow-lg"
+                              : "bg-muted text-muted-foreground border-border"
                               }`}
                           >
-                            <Icon className="w-5 h-5" />
+                            <Icon className="w-7 h-7" />
                           </div>
                           <div className="flex-1 space-y-1">
                             <div className="flex items-center gap-2">
-                              <h4 className="font-semibold">{achievement.title}</h4>
+                              <h4 className={`font-bold text-lg ${achievement.unlocked ? "text-yellow-800 drop-shadow" : ""}`}>{achievement.title}</h4>
                               {achievement.unlocked && (
-                                <Badge variant="secondary" className="text-xs">
+                                <Badge variant="secondary" className="text-xs animate-pulse border border-pink-400 bg-pink-100 text-pink-900">
                                   +{achievement.xp} XP
                                 </Badge>
                               )}
                             </div>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-muted-foreground italic">
                               {achievement.description}
                             </p>
-                            {!achievement.unlocked &&
-                              achievement.progress !== undefined && (
-                                <div className="space-y-1">
-                                  <Progress value={achievement.progress} className="h-2" />
-                                  <div className="text-xs text-muted-foreground">
-                                    {achievement.progress}% complete
-                                  </div>
-                                </div>
-                              )}
                           </div>
                         </div>
                       </section>
@@ -816,16 +809,16 @@ export default function Dashboard() {
                   return (
                     <Card
                       key={index}
-                      className="text-center shadow-card hover:shadow-glow transition-all duration-300"
+                      className="text-center shadow-card hover:shadow-glow transition-all duration-300 bg-gradient-to-br from-pink-100 via-yellow-50 to-orange-100 border-2 border-pink-200"
                     >
                       <CardContent className="pt-6">
-                        <div className="w-12 h-12 bg-gradient-secondary rounded-lg flex items-center justify-center mx-auto mb-3">
-                          <Icon className="w-6 h-6 text-secondary-foreground" />
+                        <div className="w-12 h-12 bg-gradient-to-tr from-pink-400 via-yellow-400 to-orange-400 rounded-lg flex items-center justify-center mx-auto mb-3 shadow-md">
+                          <Icon className="w-6 h-6 text-white" />
                         </div>
-                        <div className="text-2xl font-bold text-primary mb-1">
+                        <div className="text-2xl font-extrabold text-pink-700 mb-1 drop-shadow">
                           {stat.value}
                         </div>
-                        <div className="text-sm text-muted-foreground">{stat.label}</div>
+                        <div className="text-sm text-pink-900 font-semibold">{stat.label}</div>
                       </CardContent>
                     </Card>
                   );
@@ -837,7 +830,7 @@ export default function Dashboard() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Level Roadmap */}
-            <Card className="shadow-card">
+            <Card className="shadow-card bg-gradient-to-r from-pink-100 via-yellow-50 to-orange-100 border-2 border-pink-200">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Target className="w-5 h-5 text-primary" />
@@ -884,7 +877,7 @@ export default function Dashboard() {
             </Card>
 
             {/* Completed Quests (shows unlocked achievements with special design) */}
-            <Card className="shadow-card">
+            <Card className="shadow-card bg-gradient-to-r from-yellow-50 via-primary/10 to-secondary/10 border-2 border-yellow-100">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Trophy className="w-5 h-5 text-primary" />
@@ -902,9 +895,9 @@ export default function Dashboard() {
                     return (
                       <div
                         key={achievement.id}
-                        className="p-4 rounded-lg border bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/30 transition-all flex items-start gap-3"
+                        className="p-4 rounded-lg border-2 bg-gradient-to-r from-pink-100 via-yellow-50 to-orange-100 border-pink-500 transition-all flex items-start gap-3"
                       >
-                        <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gradient-primary text-primary-foreground">
+                        <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gradient-to-br from-pink-400 via-yellow-400 to-orange-400 text-white">
                           <Icon className="w-5 h-5" />
                         </div>
                         <div className="flex-1 space-y-1">

@@ -1,3 +1,4 @@
+import React from "react";
 import { useState, useEffect, useRef } from "react";
 import { incrementRecipeCount, getRecipeCount } from "@/lib/utils";
 import { Navigation } from "@/components/Navigation";
@@ -236,7 +237,7 @@ export default function Recipes() {
   };
 
   const handleFinishCooking = () => {
-    if (!selectedRecipe) return;
+     if (!selectedRecipe) return;
     let newXP = userXP + selectedRecipe.xp;
     let newLevel = userLevel;
     let nextLevelXP = 400 * (2 ** newLevel - 1) - newXP;
@@ -245,7 +246,7 @@ export default function Recipes() {
       newLevel++;
       nextLevelXP = 400 * (2 ** newLevel - 1);
     }
-
+    
     setUserXP(newXP);
     setUserLevel(newLevel);
     setXpToNextLevel(nextLevelXP);
@@ -333,7 +334,7 @@ export default function Recipes() {
       <Navigation />
       <main className="flex-1 p-8">
         {!selectedRecipe ? (
-          <>
+          <React.Fragment>
             <div className="mb-8">
               <h1 className="text-3xl font-bold mb-2">Recipe Library</h1>
               <p className="text-muted-foreground">
@@ -346,7 +347,7 @@ export default function Recipes() {
 
             <div className="flex gap-8">
               <div className="w-80 space-y-6">
-                <Card>
+                <Card className="bg-gradient-to-br from-pink-50 via-yellow-50 to-orange-50 border-2 border-pink-300 shadow-card hover:shadow-glow transition-all duration-300">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Search className="w-5 h-5" />
@@ -363,7 +364,7 @@ export default function Recipes() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="bg-gradient-to-br from-pink-50 via-yellow-50 to-orange-50 border-2 border-pink-300 shadow-card hover:shadow-glow transition-all duration-300">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Filter className="w-5 h-5" />
@@ -394,7 +395,7 @@ export default function Recipes() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="bg-gradient-to-br from-pink-50 via-yellow-50 to-orange-50 border-2 border-pink-300 shadow-card hover:shadow-glow transition-all duration-300">
                   <CardHeader>
                     <CardTitle>Options</CardTitle>
                   </CardHeader>
@@ -449,16 +450,16 @@ export default function Recipes() {
                 <div
                   className={
                     viewMode === "grid"
-                      ? "grid md:grid-cols-2 xl:grid-cols-3 gap-6"
-                      : "space-y-4"
+                      ? "grid md:grid-cols-2 xl:grid-cols-3 gap-8"
+                      : "space-y-6"
                   }
                 >
                   {filteredRecipes.map((recipe) => (
                     <Card
                       key={recipe.id}
-                      className={`shadow-card group transition-all duration-300 ${recipe.isLocked
+                      className={`shadow-card group transition-all duration-300 bg-gradient-to-br from-pink-50 via-yellow-50 to-orange-50 border-2 border-pink-300 ${recipe.isLocked
                         ? "opacity-75"
-                        : "hover:-translate-y-1"
+                        : "hover:-translate-y-1 scale-[1.03]"
                         }`}
                     >
                       <div className="relative">
@@ -512,7 +513,6 @@ export default function Recipes() {
                     </Card>
                   ))}
                 </div>
-
                 {canLoadMore && (
                   <div className="mt-6 text-center">
                     <Button
@@ -524,9 +524,9 @@ export default function Recipes() {
                     </Button>
                   </div>
                 )}
-              </div>
             </div>
-          </>
+          </div>
+          </React.Fragment>
         ) : (
           <div className="max-w-4xl mx-auto">
             <Button

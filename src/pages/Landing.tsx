@@ -43,10 +43,10 @@ export default function Landing() {
           </div>
           
           <div className="flex items-center gap-4">
-            <Link to="/login">
+            <Link to="/">
               <Button variant="ghost">Log In</Button>
             </Link>
-            <Link to="/signup">
+            <Link to="/">
               <Button variant="hero">Sign Up</Button>
             </Link>
           </div>
@@ -128,7 +128,7 @@ export default function Landing() {
             return (
               <Card 
                 key={index} 
-                className="text-center p-6 shadow-card hover:shadow-glow transition-all duration-300 hover:-translate-y-2 border-border/50"
+                className="text-center p-6 shadow-card hover:shadow-glow transition-all duration-300 hover:-translate-y-2 bg-gradient-to-br from-pink-100 via-yellow-50 to-orange-100 border-2 border-pink-200"
               >
                 <CardContent className="space-y-4">
                   <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto">

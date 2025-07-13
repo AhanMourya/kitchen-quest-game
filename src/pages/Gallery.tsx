@@ -230,7 +230,7 @@ export default function Gallery() {
           {/* Gallery Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredItems.map((item) => (
-              <Card key={item.id} className="shadow-card hover:shadow-glow transition-all overflow-hidden">
+              <Card key={item.id} className="shadow-card hover:shadow-glow transition-all duration-300 bg-gradient-to-br from-pink-100 via-yellow-50 to-orange-100 border-2 border-pink-200 overflow-hidden">
                 <div className="relative">
                   <img
                     src={item.image}
