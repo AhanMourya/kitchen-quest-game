@@ -166,7 +166,7 @@ export default function Landing() {
               <Link to="/signup">
                 <Button variant="outline" size="sm">Signup</Button>
               </Link>
-              {/* TEMP: Button to clear all localStorage data for dev/testing */}
+              
               <Button
                 variant="destructive"
                 size="sm"

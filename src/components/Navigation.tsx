@@ -1,14 +1,14 @@
 
 // Navigation sidebar for the app. Shows logo, XP/level progress, and navigation links.
 import { useState, useEffect } from "react";
-// import { auth, getUserProfile } from "@/firebase"; // Firebase helpers for user data (REMOVED)
-import { Link, useLocation } from "react-router-dom"; // Routing
-import { Home, BookOpen, TrendingUp, Users, Camera, User, Settings, ChefHat } from "lucide-react"; // Icons
+// import { auth, getUserProfile } from "@/firebase"; fire base old, useless rn
+import { Link, useLocation } from "react-router-dom"; 
+import { Home, BookOpen, TrendingUp, Users, Camera, User, Settings, ChefHat } from "lucide-react"; 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 
-// List of navigation items for the sidebar
+// nav items
 const navigationItems = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
   { name: "Recipes", href: "/recipes", icon: BookOpen },
@@ -16,15 +16,11 @@ const navigationItems = [
   { name: "Cuisine Mastery", href: "/level", icon: TrendingUp },
 ];
 
-// Example: { name: "Community", href: "/community", icon: Users },
-
-// Navigation sidebar component
+// Nav main side bar thing
 export function Navigation() {
   const location = useLocation(); // Current route location
 
-  // --- XP/Level Local Storage helpers ---
-  // All user XP/level data is stored in localStorage under the key 'userProfile'.
-  // The structure is: { xp: number, level: number, xpToNextLevel: number }
+  // --- XP helpers ---
   function getUserProfileLocal(): { xp: number; level: number; xpToNextLevel: number } {
     const data = localStorage.getItem('userProfile');
     if (data) {
@@ -47,7 +43,6 @@ export function Navigation() {
   const [userLevel, setUserLevel] = useState(() => getUserProfileLocal().level);
   const [xpToNextLevel, setXpToNextLevel] = useState(() => getUserProfileLocal().xpToNextLevel);
 
-  // On mount, load user XP/level from localStorage and listen for changes
   useEffect(() => {
     function updateFromLocalStorage() {
       const { xp, level, xpToNextLevel } = getUserProfileLocal();
@@ -56,9 +51,7 @@ export function Navigation() {
       setXpToNextLevel(xpToNextLevel);
     }
     updateFromLocalStorage();
-    // Listen for localStorage changes (from other tabs/windows)
     window.addEventListener('storage', updateFromLocalStorage);
-    // Listen for custom event for same-tab updates
     window.addEventListener('userProfileUpdated', updateFromLocalStorage);
     return () => {
       window.removeEventListener('storage', updateFromLocalStorage);
@@ -66,13 +59,12 @@ export function Navigation() {
     };
   }, []);
 
-  // Calculate XP progress bar percentage
   const currentXPForLevel = 0;
   const nextLevelXP = xpToNextLevel;
   const xpProgress = ((userXP) / (nextLevelXP + userXP)) * 100;
 
-  // --- Fancy Rotating Badge Logic ---
-  // Get completed achievements from localStorage
+  //New Random Badge
+ 
   function getCompletedAchievements() {
     try {
       return JSON.parse(localStorage.getItem('completedAchievements') || '[]');
@@ -125,7 +117,6 @@ export function Navigation() {
     setCompleted(getCompletedAchievements());
   }, [location.pathname]);
 
-  // Rotate badge every 2 seconds
   useEffect(() => {
     if (!completed.length) return;
     const interval = setInterval(() => {
@@ -180,7 +171,7 @@ export function Navigation() {
         </p>
       </div>
 
-      {/* Navigation Items and Centered Badge */}
+      
       <div className="flex-1 p-4 flex flex-col">
         <ul className="space-y-2">
           {navigationItems.map((item) => {
@@ -205,7 +196,7 @@ export function Navigation() {
           })}
         </ul>
         <div className="flex-1 flex items-center justify-center">
-          {/* Fancy Rotating Badge Section (centered vertically) */}
+       
           <div className="flex flex-col items-center">
             <div className="relative group">
               <span className="absolute -top-2 -right-2 text-blue-300 text-2xl animate-ping select-none pointer-events-none">✨</span>

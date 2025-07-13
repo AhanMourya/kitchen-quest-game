@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { incrementRecipeCount, getRecipeCount } from "@/lib/utils";
 
-// Your Spoonacular API key
+// KEY
 const API_KEY = "d805116f65234055857a2587f63c3ebc";
 
 // LocalStorage keys
@@ -33,7 +33,7 @@ const STORAGE_MISSION_KEY = "dailyMissionRecipe";
 const STORAGE_TIMESTAMP_KEY = "dailyMissionTimestamp";
 const STORAGE_PROFILE_KEY = "userProfile";
 
-// Helper to check if stored mission is still valid (<1 hour freshness)
+
 function isMissionFresh(timestamp: number | null) {
   if (!timestamp) return false;
   const now = Date.now();
@@ -73,7 +73,7 @@ function getUserProfileLocal() {
   return { xp: 0, level: 1, xpToNextLevel: 400 };
 }
 
-// Save user XP/level/profile to localStorage
+// Save user everything to localStorage
 function setUserProfileLocal(profile: {
   xp: number;
   level: number;
@@ -88,7 +88,6 @@ export default function Dashboard() {
   // Daily mission completion state
   const [missionCompleted, setMissionCompleted] = useState(isDailyMissionCompletedToday());
   const [achievements, setAchievements] = useState([
-    // --- UNLOCKED (COMPLETED) ACHIEVEMENTS FOR SCROLL DEMO ---
     {
       id: 1,
       title: "First Flame",
@@ -254,7 +253,7 @@ export default function Dashboard() {
       progress: 0,
     },
   ]);
-  // Listen for storage changes (in case another tab updates)
+ 
   useEffect(() => {
     const handler = () => setMissionCompleted(isDailyMissionCompletedToday());
     window.addEventListener('storage', handler);
@@ -264,7 +263,7 @@ export default function Dashboard() {
   const getRecipesCompletedCount = () => parseInt(localStorage.getItem('recipesCompletedCount') || '0', 10);
   const [recipeCount, setRecipeCount] = useState(getRecipesCompletedCount());
 
-  // Unique cuisines mastered = bosses defeated
+  // Unique cuisines mastered/bosses beat
   const getDefeatedBossesCount = () => {
     try {
       return JSON.parse(localStorage.getItem('defeatedBosses') || '[]').length;
@@ -274,11 +273,11 @@ export default function Dashboard() {
   };
   const [cuisinesMasteredCount, setCuisinesMasteredCount] = useState(getDefeatedBossesCount());
 
-  // Track daily missions completed in localStorage
+ 
   const getDailyMissionsCompleted = () => parseInt(localStorage.getItem('dailyMissionsCompleted') || '0', 10);
   const [dailyMissionsCompleted, setDailyMissionsCompleted] = useState(getDailyMissionsCompleted());
 
-  // Listen for recipesCompletedCountUpdated and defeatedBossesUpdated events to update state
+
   useEffect(() => {
     const recipeHandler = () => setRecipeCount(getRecipesCompletedCount());
     const bossesHandler = () => setCuisinesMasteredCount(getDefeatedBossesCount());
@@ -289,7 +288,7 @@ export default function Dashboard() {
       window.removeEventListener("defeatedBossesUpdated", bossesHandler);
     };
   }, []);
-  // User XP and level state, initialized from localStorage
+  // XP info from Local Storage
   const [userXP, setUserXP] = useState(() => getUserProfileLocal().xp);
   const [userLevel, setUserLevel] = useState(() => getUserProfileLocal().level);
   const [xpToNextLevel, setXpToNextLevel] = useState(
@@ -304,23 +303,6 @@ export default function Dashboard() {
   const [questStarted, setQuestStarted] = useState(false);
   const [detailedRecipe, setDetailedRecipe] = useState<null | any>(null);
 
-  // Achievements data
-  // --- Achievements List ---
-  // Add new achievements here! Each object is a new achievement.
-  // id must be unique. You can set unlocked, xp, progress, and icon.
-  // Example/test achievements added below:
-  // --- Achievements List ---
-  // Add new achievements here! Each object is a new achievement.
-  // id must be unique. You can set unlocked, xp, progress, and icon.
-  // Example/test achievements added below:
-
-
-
-  // --- LOGIC: Unlock achievements when user finishes a recipe or meets criteria ---
-  // 1. Unlock 'First Flame' when any recipe is finished.
-  // 2. Unlock 'XP Junkie' when userXP >= 1000.
-  // 3. Unlock 'Dicing Daily' when 5 daily missions are completed (tracked in localStorage).
-  // 4. Unlock 'Culinary Traveler' when 5 unique cuisines cooked.
 
   // React to recipeCount changes for achievements
   useEffect(() => {
@@ -329,28 +311,24 @@ export default function Dashboard() {
     }
   }, [recipeCount]);
 
-  // Always unlock XP Junkie if userXP >= 1000
   useEffect(() => {
     if (userXP >= 1000) {
       unlockAchievement("XP Junkie");
     }
   }, [userXP]);
 
-  // Unlock 'Culinary Traveler' when 5 cuisines mastered (bosses defeated)
   useEffect(() => {
     if (cuisinesMasteredCount >= 5) {
       unlockAchievement("Culinary Traveler ");
     }
   }, [cuisinesMasteredCount]);
 
-  // Always unlock 'Dicing Daily' if 5 or more daily missions completed
   useEffect(() => {
     if (dailyMissionsCompleted >= 5) {
       unlockAchievement("Dicing Daily");
     }
   }, [dailyMissionsCompleted]);
 
-  // Always unlock 'Level Up, Buttercup' if userLevel >= 5
   useEffect(() => {
     if (userLevel >= 5) {
       unlockAchievement("Level Up, Buttercup");
@@ -384,7 +362,6 @@ export default function Dashboard() {
 
   // Achievements UI show state
   const [showAllAchievements, setShowAllAchievements] = useState(false);
-  // Split achievements into incomplete and completed
   const incompleteAchievements = achievements.filter((a) => !a.unlocked);
   const completedAchievements = achievements.filter((a) => a.unlocked);
   const achievementsToShow = showAllAchievements
@@ -399,7 +376,6 @@ export default function Dashboard() {
     { label: "Achievements Completed", value: completedAchievements.length, icon: Star },
   ];
 
-  // Level roadmap data
   const levels = [
     { level: 1, title: "Prep Cook", xpRequired: 0 },
     { level: 2, title: "Knife Rookie", xpRequired: 400 },
@@ -507,14 +483,12 @@ export default function Dashboard() {
     }
   }
 
-  // Finish cooking: add XP, check level up, update localStorage
   function finishCooking() {
     if (!dailyMission) return;
 
     let newXP = userXP + dailyMission.xpReward;
     let newLevel = userLevel;
     let newXpToNextLevel = xpToNextLevel;
-    // Example level-up logic: double XP needed per level (can customize)
     if (newXpToNextLevel <= 0) {
       newLevel += 1;
       newXpToNextLevel = xpNeededForLevel(newLevel + 1) - newXP;
@@ -524,9 +498,9 @@ export default function Dashboard() {
     setXpToNextLevel(newXpToNextLevel);
     setUserProfileLocal({ xp: newXP, level: newLevel, xpToNextLevel: newXpToNextLevel });
 
-    incrementRecipeCount(); // ✅ Increment recipe count on daily mission completion
+    incrementRecipeCount(); 
 
-    // --- NEW: Also increment unique cuisines if daily mission cuisine is new ---
+    // Also increment unique cuisines if daily mission cuisine is new 
     const uniqueCuisinesKey = 'uniqueCuisinesCooked';
     let uniqueCuisines = [];
     try {
@@ -536,7 +510,7 @@ export default function Dashboard() {
     if (recipeCuisine && !uniqueCuisines.includes(recipeCuisine)) {
       uniqueCuisines.push(recipeCuisine);
       localStorage.setItem(uniqueCuisinesKey, JSON.stringify(uniqueCuisines));
-      // Store the count for Dashboard.tsx
+      // Store the count for this file
       localStorage.setItem('uniqueCuisinesCookedCount', uniqueCuisines.length.toString());
       window.dispatchEvent(new Event('uniqueCuisinesCookedUpdated'));
     }
@@ -546,11 +520,11 @@ export default function Dashboard() {
       if (getRecipeCount() >= 1) {
         unlockAchievement("First Flame");
       }
-      // 2. Unlock 'XP Junkie' if XP >= 1000
+      
       if (newXP >= 1000) {
         unlockAchievement('XP Junkie');
       }
-      // 3. Unlock 'Dicing Daily' if 5 daily missions completed
+      
       const dailyMissionsCompleted = incrementDailyMissionsCompleted();
       if (dailyMissionsCompleted >= 5) {
         unlockAchievement('Dicing Daily');
@@ -587,7 +561,6 @@ export default function Dashboard() {
     return 100 * (2 ** (level + 1)); // example: level 2 needs 400, level 3 800, etc.
   }
 
-  // Helper: get/set completed achievements in localStorage
   function getCompletedAchievements() {
     try {
       return JSON.parse(localStorage.getItem('completedAchievements') || '[]');
@@ -607,7 +580,6 @@ export default function Dashboard() {
     }
   }, []);
 
-  // Helper: get defeated bosses from localStorage
   function getDefeatedBosses() {
     try {
       return JSON.parse(localStorage.getItem('defeatedBosses') || '[]');
@@ -636,7 +608,6 @@ export default function Dashboard() {
   useEffect(() => {
     function checkBossAchievements() {
       const defeated = getDefeatedBosses();
-      // Grant cuisine mastery achievements for each boss
       Object.entries(bossToAchievement).forEach(([boss, achievement]) => {
         if (defeated.includes(boss)) {
           unlockAchievement(achievement);
@@ -657,7 +628,7 @@ export default function Dashboard() {
       <Navigation />
 
       <main className="flex-1 p-8 max-w-7xl mx-auto">
-        {/* Welcome Header */}
+       
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
@@ -825,7 +796,7 @@ export default function Dashboard() {
                           : "bg-muted/60 border-border/60"
                           }`}
                       >
-                        {/* Decorative sparkle for unlocked */}
+                       
                         {achievement.unlocked && (
                           <span className="absolute -top-2 -right-2 text-yellow-400 text-2xl animate-bounce select-none">✨</span>
                         )}

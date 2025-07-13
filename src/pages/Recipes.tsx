@@ -25,7 +25,7 @@ import {
   X,
 } from "lucide-react";
 
-const API_KEY = "d805116f65234055857a2587f63c3ebc"; // CURRENT SPOONACULAR API KEY
+const API_KEY = "d805116f65234055857a2587f63c3ebc"; // CURRENT API KEY
 
 const cuisineTypes = [
   { id: "african", label: " African" },
@@ -85,7 +85,7 @@ function setUserProfileLocal(profile: {
   window.dispatchEvent(new Event("userProfileUpdated"));
 }
 
-// ✅ Save finished recipe to cookedRecipes localStorage
+
 function addToCookedRecipes(recipe: any) {
   const existing = JSON.parse(localStorage.getItem("cookedRecipes") || "[]");
   const alreadyAdded = existing.some((r: any) => r.id === recipe.id);
@@ -129,7 +129,6 @@ export default function Recipes() {
     fetchRecipesBySearch(searchQuery, selectedCuisines, 1, true);
   }, [searchQuery, selectedCuisines, showUnlockedOnly]);
 
-  // Debounced fetch for search input (optional)
   useEffect(() => {
     if (searchTimeout.current) {
       clearTimeout(searchTimeout.current);
@@ -265,17 +264,15 @@ export default function Recipes() {
     setXpToNextLevel(nextLevelXP);
     setUserProfileLocal({ xp: newXP, level: newLevel, xpToNextLevel: nextLevelXP });
 
-    addToCookedRecipes(selectedRecipe); // ✅ Save recipe
+    addToCookedRecipes(selectedRecipe); // 
     // Increment recipe count in localStorage for cross-page use
-    incrementRecipeCount(); // legacy, if used elsewhere
-    // New: store total completed count
+    incrementRecipeCount(); 
     const countKey = 'recipesCompletedCount';
     let completedCount = parseInt(localStorage.getItem(countKey) || '0', 10);
     completedCount += 1;
     localStorage.setItem(countKey, completedCount.toString());
     window.dispatchEvent(new Event('recipesCompletedCountUpdated'));
 
-    // --- Unique cuisines logic ---
     const uniqueCuisinesKey = 'uniqueCuisinesCooked';
     let uniqueCuisines: string[] = [];
     try {

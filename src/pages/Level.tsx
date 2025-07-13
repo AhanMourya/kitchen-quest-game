@@ -14,7 +14,7 @@ const bossAvatars: Record<string, string> = {
   "The Seoul Sizzler": "🔥",
   "The Sweet Sage": "🍯",
 };
-// Confetti animation (CSS only, simple)
+// Confetti animation (CSS only, muy simple)
 function Confetti() {
   return (
     <div className="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center animate-fade-out" style={{ animationDuration: '1.5s' }}>
@@ -40,7 +40,6 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Navigation } from "@/components/Navigation";
 import { X } from "lucide-react";
-// Helper to persist and load meal completion state
 function getCuisineProgress() {
   const data = localStorage.getItem("cuisineProgress");
   return data ? JSON.parse(data) : {};
@@ -48,7 +47,6 @@ function getCuisineProgress() {
 function setCuisineProgress(progress: any) {
   localStorage.setItem("cuisineProgress", JSON.stringify(progress));
 }
-// Helper to persist and load defeated bosses
 function getDefeatedBosses() {
   try {
     return JSON.parse(localStorage.getItem('defeatedBosses') || '[]');
@@ -211,7 +209,7 @@ export default function CuisineMastery() {
       updated[cuisineName][mealIdx] = !updated[cuisineName][mealIdx];
       setCuisineProgress(updated);
 
-      // If boss just got checked, show confetti and store boss as defeated
+      // confetti logic
       const cuisine = cuisines.find(c => c.name === cuisineName);
       if (cuisine) {
         const bossIdx = cuisine.meals.findIndex(m => typeof m === "object" && m.boss);
@@ -275,7 +273,7 @@ export default function CuisineMastery() {
                           <li key={mealName + "-" + idx2} className="flex items-center gap-2">
                             <span className={`w-2 h-2 rounded-full ${isBoss ? "bg-yellow-400" : "bg-primary"} inline-block`} />
                             <span className={`text-base ${bossDone ? "line-through text-muted-foreground" : ""}`}>{mealName}</span>
-                            {/* Boss avatar */}
+                            
                             {isBoss && bossName && (
                               <span className="ml-2 text-xl" title={bossName}>{bossAvatars[bossName] || "👑"}</span>
                             )}
@@ -360,10 +358,8 @@ export default function CuisineMastery() {
                     const mealName: string = isObj ? meal.name : String(meal);
                     const isBoss = isObj && meal.boss;
                     const bossName = isObj && meal.bossName;
-                    // Boss meal: only enable checkbox if all previous are checked
-                    // Only apply bossDisabled to the boss meal
+                    
                     const bossIdx = selectedCuisine.meals.findIndex(m => typeof m === "object" && m.boss);
-                    // Always lock boss if any of the first four are unchecked, even on modal open
                     const bossDisabled = isBoss && bossIdx === i && (
                       !progress[selectedCuisine.name] || progress[selectedCuisine.name].slice(0, i).some((v: boolean) => !v)
                     );

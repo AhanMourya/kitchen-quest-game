@@ -18,7 +18,7 @@ export function XPProgressBar({
 }: XPProgressBarProps) {
   const [displayXP, setDisplayXP] = useState(0);
   
-  // Helper to get current XP from localStorage (matches Recipes/Dashboard logic)
+  // Helper for XP getter
   function getUserProfileLocal(): { xp: number; level: number; xpToNextLevel: number } {
     const data = localStorage.getItem('userProfile');
     if (data) {
@@ -36,7 +36,7 @@ export function XPProgressBar({
     return { xp: 0, level: 1, xpToNextLevel: 400 };
   }
 
-  // Use XP from localStorage if available, otherwise fallback to prop
+  // Local Storage XP stuff
   const localXP = getUserProfileLocal().xp;
   const currentLevelXP = localXP;
   const nextLevelXP = 400 * (2 ** level - 1);
@@ -79,7 +79,7 @@ export function XPProgressBar({
           />
         </div>
         
-        {/* Glow effect */}
+        {/* Glow  effect */}
         <div 
           className="absolute top-0 h-full bg-gradient-to-r from-transparent via-primary-glow/20 to-transparent rounded-full blur-sm"
           style={{ width: `${displayXP}%` }}

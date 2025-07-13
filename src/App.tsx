@@ -31,11 +31,11 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/recipes" element={<Recipes />} />
           <Route path="/level" element={<Level />} />
-         {/* <Route path="/community" element={<Community />} /> */}
+          <Route path="/community" element={<Community />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          {/* routes up here */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
