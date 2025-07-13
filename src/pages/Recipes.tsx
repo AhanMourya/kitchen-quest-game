@@ -25,7 +25,7 @@ import {
   X,
 } from "lucide-react";
 
-const API_KEY = "348fc84229fd49848f40916bd485b276"; // CURRENT SPOONACULAR API KEY
+const API_KEY = "de958240a28b451d9e1cce53745bcbff"; // CURRENT SPOONACULAR API KEY
 
 const cuisineTypes = [
   { id: "african", label: " African" },
@@ -237,7 +237,7 @@ export default function Recipes() {
   };
 
   const handleFinishCooking = () => {
-     if (!selectedRecipe) return;
+    if (!selectedRecipe) return;
     let newXP = userXP + selectedRecipe.xp;
     let newLevel = userLevel;
     let nextLevelXP = 400 * (2 ** newLevel - 1) - newXP;
@@ -246,7 +246,7 @@ export default function Recipes() {
       newLevel++;
       nextLevelXP = 400 * (2 ** newLevel - 1);
     }
-    
+
     setUserXP(newXP);
     setUserLevel(newLevel);
     setXpToNextLevel(nextLevelXP);
@@ -524,8 +524,8 @@ export default function Recipes() {
                     </Button>
                   </div>
                 )}
+              </div>
             </div>
-          </div>
           </React.Fragment>
         ) : (
           <div className="max-w-4xl mx-auto">

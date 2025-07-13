@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 // Boss avatars (simple emoji for demo, can be replaced with images)
 const bossAvatars: Record<string, string> = {
@@ -17,7 +16,7 @@ const bossAvatars: Record<string, string> = {
 // Confetti animation (CSS only, simple)
 function Confetti() {
   return (
-    <div className="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center animate-fade-out" style={{animationDuration: '1.5s'}}>
+    <div className="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center animate-fade-out" style={{ animationDuration: '1.5s' }}>
       {[...Array(30)].map((_, i) => (
         <div
           key={i}
@@ -48,6 +47,18 @@ function getCuisineProgress() {
 function setCuisineProgress(progress: any) {
   localStorage.setItem("cuisineProgress", JSON.stringify(progress));
 }
+// Helper to persist and load defeated bosses
+function getDefeatedBosses() {
+  try {
+    return JSON.parse(localStorage.getItem('defeatedBosses') || '[]');
+  } catch {
+    return [];
+  }
+}
+function setDefeatedBosses(bosses) {
+  localStorage.setItem('defeatedBosses', JSON.stringify(bosses));
+  window.dispatchEvent(new Event('defeatedBossesUpdated'));
+}
 
 const cuisines = [
   {
@@ -64,7 +75,7 @@ const cuisines = [
   {
     name: "Greek",
     color: "bg-cyan-100",
-    meals: [  
+    meals: [
       "Greek Salad",
       "Souvlaki",
       "Spanakopita",
@@ -199,7 +210,7 @@ export default function CuisineMastery() {
       updated[cuisineName][mealIdx] = !updated[cuisineName][mealIdx];
       setCuisineProgress(updated);
 
-      // If boss just got checked, show confetti
+      // If boss just got checked, show confetti and store boss as defeated
       const cuisine = cuisines.find(c => c.name === cuisineName);
       if (cuisine) {
         const bossIdx = cuisine.meals.findIndex(m => typeof m === "object" && m.boss);
@@ -207,6 +218,16 @@ export default function CuisineMastery() {
           setShowConfetti(true);
           if (confettiTimeout.current) clearTimeout(confettiTimeout.current);
           confettiTimeout.current = setTimeout(() => setShowConfetti(false), 1500);
+          // Store defeated boss globally
+          const bossMeal = cuisine.meals[bossIdx];
+          const bossName = typeof bossMeal === "object" && bossMeal.bossName;
+          if (bossName) {
+            const defeated = getDefeatedBosses();
+            if (!defeated.includes(bossName)) {
+              defeated.push(bossName);
+              setDefeatedBosses(defeated);
+            }
+          }
         }
       }
       return updated;

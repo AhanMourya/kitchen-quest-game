@@ -43,15 +43,18 @@ export default function Gallery() {
   });
 
   useEffect(() => {
+    const API_KEY = "de958240a28b451d9e1cce53745bcbff";
     const stored = localStorage.getItem("uploadedDishes");
     const cooked = localStorage.getItem("cookedRecipes");
+    const cookedDaily = localStorage.getItem("cookedDailyMissionRecipes");
 
     let uploaded = stored ? JSON.parse(stored) : [];
     let cookedRecipes = cooked ? JSON.parse(cooked) : [];
+    let cookedDailyRecipes = cookedDaily ? JSON.parse(cookedDaily) : [];
 
     // Add cooked recipes if not already present
-    cookedRecipes.forEach((recipe: any) => {
-      const exists = uploaded.some((item: any) => item.id === recipe.id);
+    cookedRecipes.forEach((recipe) => {
+      const exists = uploaded.some((item) => item.id === recipe.id);
       if (!exists) {
         uploaded.unshift({
           id: recipe.id,
@@ -71,8 +74,57 @@ export default function Gallery() {
       }
     });
 
-    setUploadedDishes(uploaded);
-    localStorage.setItem("uploadedDishes", JSON.stringify(uploaded));
+    // Add cooked daily mission recipes if not already present
+    cookedDailyRecipes.forEach((recipe) => {
+      const exists = uploaded.some((item) => item.id === recipe.id && item.caption === "Completed as a Daily Mission!");
+      if (!exists) {
+        uploaded.unshift({
+          id: recipe.id,
+          image: recipe.image,
+          title: recipe.title,
+          cuisine: recipe.cuisine || "Global",
+          recipe: recipe.title,
+          caption: "Completed as a Daily Mission!",
+          tags: [recipe.cuisine || "global", "daily-mission"],
+          rating: 5,
+          chef: "You",
+          chefLevel: 1,
+          likes: 0,
+          comments: 0,
+          timeAgo: "Just now",
+        });
+      }
+    });
+
+    // Fetch images for daily mission recipes if missing
+    const fetchImages = async () => {
+      let needsUpdate = false;
+      const updated = await Promise.all(
+        uploaded.map(async (item) => {
+          if (!item.image && item.caption === "Completed as a Daily Mission!" && item.id) {
+            try {
+              const res = await fetch(`https://api.spoonacular.com/recipes/${item.id}/information?apiKey=${API_KEY}`);
+              if (res.ok) {
+                const data = await res.json();
+                if (data.image) {
+                  needsUpdate = true;
+                  return { ...item, image: data.image };
+                }
+              }
+            } catch { }
+          }
+          return item;
+        })
+      );
+      if (needsUpdate) {
+        setUploadedDishes(updated);
+        localStorage.setItem("uploadedDishes", JSON.stringify(updated));
+      } else {
+        setUploadedDishes(uploaded);
+        localStorage.setItem("uploadedDishes", JSON.stringify(uploaded));
+      }
+    };
+    fetchImages();
   }, []);
 
   const handleLike = (itemId: number) => {

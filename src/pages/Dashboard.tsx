@@ -26,7 +26,7 @@ import {
 import { incrementRecipeCount, getRecipeCount } from "@/lib/utils";
 
 // Your Spoonacular API key
-const API_KEY = "348fc84229fd49848f40916bd485b276";
+const API_KEY = "de958240a28b451d9e1cce53745bcbff";
 
 // LocalStorage keys
 const STORAGE_MISSION_KEY = "dailyMissionRecipe";
@@ -132,15 +132,7 @@ export default function Dashboard() {
       progress: 0,
       xp: 50,
     },
-    {
-      id: 6,
-      title: "Photo Finish",
-      description: "	Upload 10 food photos",
-      icon: BookOpen,
-      unlocked: false,
-      progress: 0,
-      xp: 50,
-    },
+    // ...existing code...
     {
       id: 7,
       title: "Level Up, Buttercup",
@@ -261,23 +253,29 @@ export default function Dashboard() {
   const getRecipesCompletedCount = () => parseInt(localStorage.getItem('recipesCompletedCount') || '0', 10);
   const [recipeCount, setRecipeCount] = useState(getRecipesCompletedCount());
 
-  // Unique cuisines cooked state
-  const getUniqueCuisinesCookedCount = () => parseInt(localStorage.getItem('uniqueCuisinesCookedCount') || '0', 10);
-  const [uniqueCuisinesCookedCount, setUniqueCuisinesCookedCount] = useState(getUniqueCuisinesCookedCount());
+  // Unique cuisines mastered = bosses defeated
+  const getDefeatedBossesCount = () => {
+    try {
+      return JSON.parse(localStorage.getItem('defeatedBosses') || '[]').length;
+    } catch {
+      return 0;
+    }
+  };
+  const [cuisinesMasteredCount, setCuisinesMasteredCount] = useState(getDefeatedBossesCount());
 
   // Track daily missions completed in localStorage
   const getDailyMissionsCompleted = () => parseInt(localStorage.getItem('dailyMissionsCompleted') || '0', 10);
   const [dailyMissionsCompleted, setDailyMissionsCompleted] = useState(getDailyMissionsCompleted());
 
-  // Listen for recipesCompletedCountUpdated and uniqueCuisinesCookedUpdated events to update state
+  // Listen for recipesCompletedCountUpdated and defeatedBossesUpdated events to update state
   useEffect(() => {
     const recipeHandler = () => setRecipeCount(getRecipesCompletedCount());
-    const cuisineHandler = () => setUniqueCuisinesCookedCount(getUniqueCuisinesCookedCount());
+    const bossesHandler = () => setCuisinesMasteredCount(getDefeatedBossesCount());
     window.addEventListener("recipesCompletedCountUpdated", recipeHandler);
-    window.addEventListener("uniqueCuisinesCookedUpdated", cuisineHandler);
+    window.addEventListener("defeatedBossesUpdated", bossesHandler);
     return () => {
       window.removeEventListener("recipesCompletedCountUpdated", recipeHandler);
-      window.removeEventListener("uniqueCuisinesCookedUpdated", cuisineHandler);
+      window.removeEventListener("defeatedBossesUpdated", bossesHandler);
     };
   }, []);
   // User XP and level state, initialized from localStorage
@@ -327,12 +325,12 @@ export default function Dashboard() {
     }
   }, [userXP]);
 
-  // Unlock 'Culinary Traveler' when 5 unique cuisines cooked
+  // Unlock 'Culinary Traveler' when 5 cuisines mastered (bosses defeated)
   useEffect(() => {
-    if (uniqueCuisinesCookedCount >= 5) {
+    if (cuisinesMasteredCount >= 5) {
       unlockAchievement("Culinary Traveler ");
     }
-  }, [uniqueCuisinesCookedCount]);
+  }, [cuisinesMasteredCount]);
 
   // Always unlock 'Dicing Daily' if 5 or more daily missions completed
   useEffect(() => {
@@ -385,7 +383,7 @@ export default function Dashboard() {
   // Quick stats (dynamic)
   const quickStats = [
     { label: "Recipes Completed", value: recipeCount, icon: BookOpen },
-    { label: "Cuisines Mastered", value: uniqueCuisinesCookedCount, icon: Trophy },
+    { label: "Cuisines Mastered", value: cuisinesMasteredCount, icon: Trophy },
     { label: "Daily Missions Completed", value: dailyMissionsCompleted, icon: Target },
     { label: "Achievements Completed", value: completedAchievements.length, icon: Star },
   ];
@@ -549,6 +547,21 @@ export default function Dashboard() {
     }, 0);
     // --- END ACHIEVEMENT LOGIC ---
 
+    // Save the cooked daily mission recipe to localStorage for gallery use
+    const cookedKey = 'cookedDailyMissionRecipes';
+    let cookedRecipes = [];
+    try {
+      cookedRecipes = JSON.parse(localStorage.getItem(cookedKey) || '[]');
+    } catch { cookedRecipes = []; }
+    // Store minimal info: id, title, date cooked, and optionally image if available
+    cookedRecipes.push({
+      id: dailyMission.id,
+      title: dailyMission.title,
+      date: new Date().toISOString(),
+      image: dailyMission.image || null
+    });
+    localStorage.setItem(cookedKey, JSON.stringify(cookedRecipes));
+
     alert(`Congrats! You earned +${dailyMission.xpReward} XP! Your total XP is now ${newXP}.`);
 
     setDailyMissionCompletedToday();
@@ -581,6 +594,50 @@ export default function Dashboard() {
     if (completed.length > 0) {
       setAchievements(prev => prev.map(a => completed.includes(a.title) ? { ...a, unlocked: true, progress: 100 } : a));
     }
+  }, []);
+
+  // Helper: get defeated bosses from localStorage
+  function getDefeatedBosses() {
+    try {
+      return JSON.parse(localStorage.getItem('defeatedBosses') || '[]');
+    } catch {
+      return [];
+    }
+  }
+
+  // Map boss names to achievement titles
+  const bossToAchievement = {
+    "The Spice Maharaja": "Indian Mastery: Tandoori Titan",
+    "Nonna Supreme": "Italian Mastery: Pasta Prodigy",
+    "The Dim Sum Dragon": "Chinese Mastery: Wok Warrior",
+    "The Shogun Chef": "Japanese Mastery: Sushi Sage",
+    "El Gran Sabio": "Mexican Mastery: Taco Tactician",
+    "Le Grand Pâtissier": "French Mastery: Baguette Boss",
+    "The Yankee Legend": "American Mastery: Grill Guardian",
+    "The Aegean Master": "Mediterranean Mastery: Olive Oracle",
+    "The Seoul Sizzler": "Korean Mastery: Kimchi Commander",
+    "The Sweet Sage": "Thai Mastery: Spice Summoner",
+    "The Olympian Chef": "Greek Mastery: Feta Fighter",
+  };
+
+  // Award cuisine mastery achievements when bosses are defeated
+  useEffect(() => {
+    function checkBossAchievements() {
+      const defeated = getDefeatedBosses();
+      // Grant cuisine mastery achievements for each boss
+      Object.entries(bossToAchievement).forEach(([boss, achievement]) => {
+        if (defeated.includes(boss)) {
+          unlockAchievement(achievement);
+        }
+      });
+      // Grant Multi-classed Chef if 3 or more unique bosses defeated
+      if (defeated.length >= 3) {
+        unlockAchievement("Multi-classed Chef");
+      }
+    }
+    checkBossAchievements();
+    window.addEventListener('defeatedBossesUpdated', checkBossAchievements);
+    return () => window.removeEventListener('defeatedBossesUpdated', checkBossAchievements);
   }, []);
 
   return (
